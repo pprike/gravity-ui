@@ -4,9 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   activateInvite as activateInviteApi,
@@ -15,9 +14,8 @@ import {
   logout as logoutApi,
 } from "@/lib/api/auth";
 import {
-  clearSession,
-  getStoredSession,
-  isSessionExpired,
+  readAuthSession,
+  subscribeAuthSession,
 } from "@/lib/auth/storage";
 import { getDashboardPath } from "@/lib/navigation/config";
 import type {
@@ -41,41 +39,49 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+function subscribeToClientMount(listener: () => void): () => void {
+  listener();
+  return () => {};
+}
 
-  useEffect(() => {
-    const stored = getStoredSession();
-    if (stored && !isSessionExpired(stored)) {
-      setSession(stored);
-    } else if (stored) {
-      clearSession();
-    }
-    setIsLoading(false);
-  }, []);
+function getClientMounted(): boolean {
+  return true;
+}
+
+function getServerMounted(): boolean {
+  return false;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const session = useSyncExternalStore(
+    subscribeAuthSession,
+    readAuthSession,
+    () => null,
+  );
+  const isHydrated = useSyncExternalStore(
+    subscribeToClientMount,
+    getClientMounted,
+    getServerMounted,
+  );
+  const isLoading = !isHydrated;
 
   const login = useCallback(async (request: LoginRequest) => {
     const nextSession = await loginApi(request);
-    setSession(nextSession);
     return getDashboardPath(nextSession.user.roles);
   }, []);
 
   const activateInvite = useCallback(async (request: ActivateInviteRequest) => {
     const nextSession = await activateInviteApi(request);
-    setSession(nextSession);
     return getDashboardPath(nextSession.user.roles);
   }, []);
 
   const loginAsDemo = useCallback((role: UserRole) => {
     const nextSession = createDemoSession(role);
-    setSession(nextSession);
     return getDashboardPath(nextSession.user.roles);
   }, []);
 
   const logout = useCallback(async () => {
     await logoutApi();
-    setSession(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(

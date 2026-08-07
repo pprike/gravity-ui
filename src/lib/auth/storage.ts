@@ -2,6 +2,17 @@ import type { AuthSession } from "@/lib/types/auth";
 
 const SESSION_KEY = "gravity_auth_session";
 
+const listeners = new Set<() => void>();
+
+export function subscribeAuthSession(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notifyAuthSessionChange(): void {
+  listeners.forEach((listener) => listener());
+}
+
 export function getStoredSession(): AuthSession | null {
   if (typeof window === "undefined") return null;
 
@@ -14,12 +25,20 @@ export function getStoredSession(): AuthSession | null {
   }
 }
 
+export function readAuthSession(): AuthSession | null {
+  const stored = getStoredSession();
+  if (!stored || isSessionExpired(stored)) return null;
+  return stored;
+}
+
 export function storeSession(session: AuthSession): void {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  notifyAuthSessionChange();
 }
 
 export function clearSession(): void {
   localStorage.removeItem(SESSION_KEY);
+  notifyAuthSessionChange();
 }
 
 export function isSessionExpired(session: AuthSession): boolean {
