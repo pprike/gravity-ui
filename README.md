@@ -32,6 +32,14 @@ npm run dev
 
 Open http://localhost:3000
 
+### Dev login (with gravity-service on `local` profile)
+
+| Organization | Email | Password |
+|--------------|-------|----------|
+| `tenant-a` | `admin@tenant-a.com` | `Password123!` |
+
+Other seeded roles: `owner@tenant-a.com`, `coach@tenant-a.com`, `receptionist@tenant-a.com` (same password). Use **Preview without API** on the login page to explore the UI without the backend.
+
 ### Environment variables
 
 | Variable | Default | Description |

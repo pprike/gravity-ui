@@ -1,18 +1,27 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/context";
+import { getDashboardPath } from "@/lib/navigation/config";
+
 export default function Home() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (isAuthenticated && user) {
+      router.replace(getDashboardPath(user.roles));
+    } else {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, isLoading, router, user]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="max-w-lg text-center">
-        <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Gravity
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
-          Admin Portal
-        </h1>
-        <p className="mt-3 text-zinc-600">
-          Next.js scaffolding for the staff admin experience. API integration and
-          role-based navigation land in US-08.
-        </p>
-      </div>
-    </main>
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+    </div>
   );
 }
