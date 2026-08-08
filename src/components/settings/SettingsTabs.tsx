@@ -12,6 +12,7 @@ export const SETTINGS_TABS: Array<{
   { id: "organization", label: "Organization" },
   { id: "locations", label: "Locations" },
   { id: "staff", label: "Staff & Roles" },
+  { id: "booking-rules", label: "Booking Rules" },
   { id: "branding", label: "Branding" },
   { id: "notifications", label: "Notifications" },
 ];
@@ -20,6 +21,7 @@ const PAGE_TITLES: Record<SettingsTab, string> = {
   organization: "Organization Settings",
   locations: "Locations",
   staff: "Staff & Roles",
+  "booking-rules": "Booking Rules",
   branding: "Branding",
   notifications: "Notifications",
 };

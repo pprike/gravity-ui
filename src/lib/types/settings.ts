@@ -2,6 +2,7 @@ export type SettingsTab =
   | "organization"
   | "locations"
   | "staff"
+  | "booking-rules"
   | "branding"
   | "notifications";
 

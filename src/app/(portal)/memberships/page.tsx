@@ -1,15 +1,18 @@
 "use client";
 
-import { CreditCard } from "lucide-react";
-import { SectionPage } from "@/components/sections/SectionPage";
+import { Suspense } from "react";
+import { MembershipPlansList } from "@/components/memberships/MembershipPlansList";
 
 export default function MembershipsPage() {
   return (
-    <SectionPage
-      icon={CreditCard}
-      title="No membership plans"
-      description="Create membership plans, assign members, and track billing status from this section."
-      actionLabel="Create plan"
-    />
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+        </div>
+      }
+    >
+      <MembershipPlansList />
+    </Suspense>
   );
 }

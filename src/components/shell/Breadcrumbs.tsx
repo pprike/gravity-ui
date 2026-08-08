@@ -16,6 +16,11 @@ export function Breadcrumbs() {
   const pathname = usePathname();
   const title = getPageTitle(pathname);
   const isSettings = pathname.startsWith("/settings");
+  const isMemberships = pathname.startsWith("/memberships");
+
+  if (isMemberships) {
+    return null;
+  }
 
   return (
     <nav aria-label="Breadcrumb" className={isSettings ? "mb-2" : "mb-6"}>

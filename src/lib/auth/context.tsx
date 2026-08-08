@@ -39,8 +39,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function subscribeToClientMount(listener: () => void): () => void {
-  listener();
+function subscribeToClientMount(): () => void {
   return () => {};
 }
 

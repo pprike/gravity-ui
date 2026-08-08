@@ -7,7 +7,7 @@ interface SelectOption {
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label: string;
+  label?: string;
   options: SelectOption[];
   hint?: string;
   error?: string;
@@ -25,15 +25,17 @@ export function Select({
   required,
   ...props
 }: SelectProps) {
-  const selectId = id ?? label.toLowerCase().replace(/\s+/g, "-");
+  const selectId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   const isRequired = showRequired ?? required;
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={selectId} className="block text-[13px] font-medium text-slate-800">
-        {label}
-        {isRequired && <span className="ml-0.5 text-danger-600">*</span>}
-      </label>
+      {label ? (
+        <label htmlFor={selectId} className="block text-[13px] font-medium text-slate-800">
+          {label}
+          {isRequired && <span className="ml-0.5 text-danger-600">*</span>}
+        </label>
+      ) : null}
       <select
         id={selectId}
         className={clsx(

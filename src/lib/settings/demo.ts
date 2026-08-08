@@ -25,7 +25,7 @@ const DEFAULT_DEMO: DemoStore = {
   organization: {
     id: "demo-org",
     slug: "gravity-demo",
-    name: "Gravity Fitness",
+    name: "Iron Peak Fitness",
     status: "active",
     settings: {
       timezone: { value: "America/New_York" },
@@ -40,7 +40,7 @@ const DEFAULT_DEMO: DemoStore = {
     {
       id: "loc-1",
       tenantId: "demo-org",
-      name: "Downtown Studio",
+      name: "Downtown Club",
       addressLine1: "123 Main Street",
       addressLine2: "tel:+1 (555) 123-4567",
       city: "Austin",

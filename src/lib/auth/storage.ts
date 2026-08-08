@@ -3,6 +3,11 @@ import type { AuthSession } from "@/lib/types/auth";
 const SESSION_KEY = "gravity_auth_session";
 
 const listeners = new Set<() => void>();
+let cachedSnapshot: AuthSession | null | undefined;
+
+function invalidateSessionCache(): void {
+  cachedSnapshot = undefined;
+}
 
 export function subscribeAuthSession(listener: () => void): () => void {
   listeners.add(listener);
@@ -10,6 +15,7 @@ export function subscribeAuthSession(listener: () => void): () => void {
 }
 
 function notifyAuthSessionChange(): void {
+  invalidateSessionCache();
   listeners.forEach((listener) => listener());
 }
 
@@ -26,9 +32,21 @@ export function getStoredSession(): AuthSession | null {
 }
 
 export function readAuthSession(): AuthSession | null {
+  if (cachedSnapshot !== undefined) {
+    if (cachedSnapshot && isSessionExpired(cachedSnapshot)) {
+      cachedSnapshot = null;
+    }
+    return cachedSnapshot;
+  }
+
   const stored = getStoredSession();
-  if (!stored || isSessionExpired(stored)) return null;
-  return stored;
+  if (!stored || isSessionExpired(stored)) {
+    cachedSnapshot = null;
+    return null;
+  }
+
+  cachedSnapshot = stored;
+  return cachedSnapshot;
 }
 
 export function storeSession(session: AuthSession): void {
