@@ -7,6 +7,7 @@ Next.js admin portal for the [Gravity](https://github.com/pprike/gravity-docs) m
 | Repository | Description |
 |------------|-------------|
 | [gravity-service](https://github.com/pprike/gravity-service) | Spring Boot REST API |
+| [gravity-mobile](https://github.com/pprike/gravity-mobile) | Flutter member app |
 | [gravity-docs](https://github.com/pprike/gravity-docs) | Product, architecture, API, and UX documentation |
 
 ## Stack

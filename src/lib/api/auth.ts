@@ -3,18 +3,14 @@ import { storeSession } from "@/lib/auth/storage";
 import type {
   ActivateInviteRequest,
   AuthSession,
+  AuthTokens,
   AuthUser,
+  LoginApiResponse,
   LoginRequest,
+  LoginResult,
 } from "@/lib/types/auth";
 
-interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: AuthUser;
-}
-
-function toSession(data: LoginResponse): AuthSession {
+function toSession(data: AuthTokens): AuthSession {
   return {
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
@@ -24,21 +20,36 @@ function toSession(data: LoginResponse): AuthSession {
   };
 }
 
-export async function login(request: LoginRequest): Promise<AuthSession> {
-  const data = await apiRequest<LoginResponse>("/api/v1/auth/login", {
+export async function login(request: LoginRequest): Promise<LoginResult> {
+  const data = await apiRequest<LoginApiResponse>("/api/v1/auth/login", {
     method: "POST",
-    body: JSON.stringify(request),
+    body: JSON.stringify({
+      email: request.email,
+      password: request.password,
+      ...(request.tenantSlug ? { tenantSlug: request.tenantSlug } : {}),
+    }),
   });
 
-  const session = toSession(data);
+  if (data.tenantSelectionRequired) {
+    return {
+      kind: "tenantSelection",
+      tenants: data.tenants ?? [],
+    };
+  }
+
+  if (!data.auth) {
+    throw new Error("Login response did not include auth tokens.");
+  }
+
+  const session = toSession(data.auth);
   storeSession(session);
-  return session;
+  return { kind: "authenticated", session };
 }
 
 export async function activateInvite(
   request: ActivateInviteRequest,
 ): Promise<AuthSession> {
-  const data = await apiRequest<LoginResponse>("/api/v1/auth/activate-invite", {
+  const data = await apiRequest<AuthTokens>("/api/v1/auth/activate-invite", {
     method: "POST",
     body: JSON.stringify(request),
   });

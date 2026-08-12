@@ -12,8 +12,8 @@ export function PlanStatusPill({ status }: PlanStatusPillProps) {
   return (
     <span
       className={clsx(
-        "inline-flex rounded-xl px-2.5 py-1 text-xs font-semibold",
-        isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600",
+        "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide",
+        isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600",
       )}
     >
       {planStatusLabel(status)}

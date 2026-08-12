@@ -19,6 +19,7 @@ import {
 import type { MembershipPlan } from "@/lib/types/memberships";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/shell/PageHeader";
 import { PlanStatusPill } from "@/components/memberships/PlanStatusPill";
 
 const TABLE_COLUMNS =
@@ -107,22 +108,20 @@ export function MembershipPlansList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Membership Plans</h1>
-          {pageSubtitle && (
-            <p className="mt-1 text-sm text-slate-600">{pageSubtitle}</p>
-          )}
-        </div>
-        <Button
-          type="button"
-          className="font-bold"
-          onClick={() => router.push("/memberships/new")}
-        >
-          <Plus className="h-4 w-4" />
-          Create Plan
-        </Button>
-      </div>
+      <PageHeader
+        title="Membership Plans"
+        subtitle={pageSubtitle || undefined}
+        actions={
+          <Button
+            type="button"
+            className="font-bold"
+            onClick={() => router.push("/memberships/new")}
+          >
+            <Plus className="h-4 w-4" />
+            Create Plan
+          </Button>
+        }
+      />
 
       {error && (
         <Card className="border-danger-200 bg-danger-50">
@@ -130,9 +129,9 @@ export function MembershipPlansList() {
         </Card>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
         <div
-          className={`${TABLE_COLUMNS} border-b border-slate-200 bg-slate-50 px-6 py-3 text-xs font-semibold text-slate-600`}
+          className={`${TABLE_COLUMNS} border-b border-neutral-200 bg-neutral-50 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500`}
         >
           <span>Plan Name</span>
           <span>Price</span>
@@ -151,7 +150,7 @@ export function MembershipPlansList() {
           plans.map((plan) => (
             <div
               key={plan.id}
-              className={`${TABLE_COLUMNS} border-b border-slate-200 px-6 py-4 last:border-b-0`}
+              className={`${TABLE_COLUMNS} border-b border-neutral-100 px-6 py-4 last:border-b-0`}
             >
               <p className="text-sm font-semibold text-slate-900">{plan.name}</p>
               <p className="text-sm font-medium text-slate-900">

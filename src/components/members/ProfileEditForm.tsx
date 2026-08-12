@@ -5,15 +5,23 @@ import { useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import {
+  getMember,
+  normalizeMemberAccountStatus,
+  shouldPatchMemberStatus,
+  updateMemberStatus,
+} from "@/lib/api/members";
+import {
   getUserProfile,
   updateUserProfile,
   uploadProfileAvatar,
 } from "@/lib/api/profile";
+import type { MemberAccountStatus } from "@/lib/types/member";
 import type { UserProfile } from "@/lib/types/profile";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormDivider } from "@/components/ui/FormSection";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 
 interface ProfileEditFormProps {
   userId: string;
@@ -27,9 +35,32 @@ interface ProfileForm {
   lastName: string;
   email: string;
   phone: string;
+  status: MemberAccountStatus;
+  membershipPlanName: string | null;
   emergencyName: string;
   emergencyPhone: string;
   emergencyRelationship: string;
+}
+
+function statusOptions(current: MemberAccountStatus) {
+  if (current === "invited") {
+    return [
+      { value: "invited", label: "Pending" },
+      { value: "disabled", label: "Inactive" },
+    ];
+  }
+
+  return [
+    { value: "active", label: "Active" },
+    { value: "disabled", label: "Inactive" },
+  ];
+}
+
+function statusHint(current: MemberAccountStatus): string | undefined {
+  if (current === "invited") {
+    return "Pending members must activate via their invitation link. You can deactivate the account instead.";
+  }
+  return undefined;
 }
 
 function splitDisplayName(displayName: string | null | undefined): {
@@ -87,15 +118,20 @@ function getProfileFields(profile: UserProfile) {
 
 function profileToForm(
   profile: UserProfile,
-  props: ProfileEditFormProps,
+  memberStatus: MemberAccountStatus,
+  membershipPlanName: string | null,
+  memberEmail?: string,
+  props?: Pick<ProfileEditFormProps, "firstName" | "lastName" | "email">,
 ): ProfileForm {
   const fields = getProfileFields(profile);
   const name = splitDisplayName(fields.displayName);
   return {
-    firstName: props.firstName ?? name.firstName,
-    lastName: props.lastName ?? name.lastName,
-    email: props.email ?? "",
+    firstName: props?.firstName ?? name.firstName,
+    lastName: props?.lastName ?? name.lastName,
+    email: memberEmail ?? props?.email ?? "",
     phone: fields.phone ?? "",
+    status: memberStatus,
+    membershipPlanName,
     emergencyName: fields.emergencyContact?.name ?? "",
     emergencyPhone: fields.emergencyContact?.phone ?? "",
     emergencyRelationship: fields.emergencyContact?.relationship ?? "",
@@ -119,6 +155,9 @@ export function ProfileEditForm({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<ProfileForm | null>(null);
+  const [savedStatus, setSavedStatus] = useState<MemberAccountStatus | null>(
+    null,
+  );
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -130,11 +169,22 @@ export function ProfileEditForm({
     let cancelled = false;
     void (async () => {
       try {
-        const profile = await getUserProfile(userId);
+        const [profile, member] = await Promise.all([
+          getUserProfile(userId),
+          getMember(userId),
+        ]);
         if (cancelled) return;
+        const memberStatus = normalizeMemberAccountStatus(member?.status);
         setForm(
-          profileToForm(profile, { userId, email, firstName, lastName }),
+          profileToForm(
+            profile,
+            memberStatus,
+            member?.membershipPlanName ?? null,
+            member?.email,
+            { email, firstName, lastName },
+          ),
         );
+        setSavedStatus(memberStatus);
         setAvatarUrl(getProfileFields(profile).avatarUrl);
       } catch {
         if (!cancelled) setError("Unable to load profile.");
@@ -145,7 +195,7 @@ export function ProfileEditForm({
     return () => {
       cancelled = true;
     };
-  }, [userId, email, firstName, lastName]);
+  }, [userId]);
 
   function updateField<K extends keyof ProfileForm>(
     key: K,
@@ -173,7 +223,7 @@ export function ProfileEditForm({
   }
 
   async function handleSave() {
-    if (!form) return;
+    if (!form || savedStatus === null) return;
     setIsSaving(true);
     setError("");
     setSuccess(false);
@@ -181,7 +231,13 @@ export function ProfileEditForm({
       .map((s) => s.trim())
       .filter(Boolean)
       .join(" ");
+    const nextStatus = form.status;
     try {
+      if (shouldPatchMemberStatus(savedStatus, nextStatus)) {
+        await updateMemberStatus(userId, nextStatus);
+        setSavedStatus(nextStatus);
+      }
+
       await updateUserProfile(userId, {
         displayName,
         phone: form.phone,
@@ -191,6 +247,7 @@ export function ProfileEditForm({
           relationship: form.emergencyRelationship,
         },
       });
+
       setSuccess(true);
     } catch (err) {
       setError(
@@ -215,11 +272,11 @@ export function ProfileEditForm({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="-mx-6 -mt-6 border-b border-neutral-200 bg-white px-8 py-4 lg:-mx-8 lg:-mt-8">
         <h2 className="text-lg font-bold text-slate-900">
           Edit Profile — {displayTitle || "Member"}
         </h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-slate-500">
           Modify member status, personal details, or plans
         </p>
       </div>
@@ -309,7 +366,35 @@ export function ProfileEditForm({
         <FormDivider />
 
         <section className="space-y-5">
-          <SectionHeading>2. Emergency Contact</SectionHeading>
+          <SectionHeading>2. Membership Plan &amp; Status</SectionHeading>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-[13px] font-semibold text-slate-900">
+                Plan Tier
+              </label>
+              <div className="rounded-lg border border-neutral-200 px-3.5 py-2.5 text-sm text-slate-900">
+                {form.membershipPlanName ?? "No plan assigned"}
+              </div>
+            </div>
+            <Select
+              label="Status"
+              value={form.status}
+              onChange={(event) =>
+                updateField(
+                  "status",
+                  event.target.value as MemberAccountStatus,
+                )
+              }
+              options={statusOptions(savedStatus ?? form.status)}
+              hint={statusHint(savedStatus ?? form.status)}
+            />
+          </div>
+        </section>
+
+        <FormDivider />
+
+        <section className="space-y-5">
+          <SectionHeading>3. Emergency Contact</SectionHeading>
           <div className="grid gap-4 sm:grid-cols-3">
             <Input
               label="Contact Name"

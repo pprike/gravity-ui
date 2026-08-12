@@ -23,6 +23,7 @@ import type {
   AuthSession,
   AuthUser,
   LoginRequest,
+  LoginResult,
   UserRole,
 } from "@/lib/types/auth";
 
@@ -31,7 +32,7 @@ interface AuthContextValue {
   session: AuthSession | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (request: LoginRequest) => Promise<string>;
+  login: (request: LoginRequest) => Promise<LoginResult>;
   activateInvite: (request: ActivateInviteRequest) => Promise<string>;
   loginAsDemo: (role: UserRole) => string;
   logout: () => Promise<void>;
@@ -65,8 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoading = !isHydrated;
 
   const login = useCallback(async (request: LoginRequest) => {
-    const nextSession = await loginApi(request);
-    return getDashboardPath(nextSession.user.roles);
+    return loginApi(request);
   }, []);
 
   const activateInvite = useCallback(async (request: ActivateInviteRequest) => {
