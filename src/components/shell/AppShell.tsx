@@ -15,7 +15,9 @@ function useShellLayout(pathname: string) {
     pathname === "/members" ||
     pathname === "/members/new" ||
     /^\/members\/[^/]+$/.test(pathname) ||
-    pathname === "/memberships"
+    pathname === "/memberships" ||
+    pathname === "/schedule" ||
+    pathname.startsWith("/schedule/")
   ) {
     return "workspace" as const;
   }

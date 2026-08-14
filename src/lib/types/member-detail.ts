@@ -29,6 +29,7 @@ export interface MemberAttendanceSummary {
 }
 
 export interface MemberMembershipDetail {
+  planId: string | null;
   planName: string;
   priceLabel: string;
   renewalLabel: string;

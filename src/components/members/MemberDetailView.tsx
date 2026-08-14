@@ -116,6 +116,7 @@ export function MemberDetailView({
       recentCheckIns: [],
     },
     membership: {
+      planId: null,
       planName: member.membershipPlanName ?? "No plan assigned",
       priceLabel: "",
       renewalLabel: "",

@@ -122,6 +122,7 @@ const JESSICA_DETAIL: MemberDetailData = {
     ],
   },
   membership: {
+    planId: null,
     planName: "Premium Monthly",
     priceLabel: "$49/mo",
     renewalLabel: "Renews on Sep 1, 2026",
@@ -224,6 +225,7 @@ function defaultDetail(planName: string | null): MemberDetailData {
       recentCheckIns: [],
     },
     membership: {
+      planId: null,
       planName: planName ?? "No plan assigned",
       priceLabel: "",
       renewalLabel: "",

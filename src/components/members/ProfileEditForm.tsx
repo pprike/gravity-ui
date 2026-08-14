@@ -5,6 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import {
+  fetchMemberSubscription,
+  updateMemberSubscriptionPlan,
+} from "@/lib/api/member-detail";
+import { listMembershipPlans } from "@/lib/api/membership-plans";
+import { formatPlanPrice } from "@/lib/memberships/format";
+import {
   getMember,
   normalizeMemberAccountStatus,
   shouldPatchMemberStatus,
@@ -16,6 +22,7 @@ import {
   uploadProfileAvatar,
 } from "@/lib/api/profile";
 import type { MemberAccountStatus } from "@/lib/types/member";
+import type { MembershipPlan } from "@/lib/types/memberships";
 import type { UserProfile } from "@/lib/types/profile";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -36,7 +43,7 @@ interface ProfileForm {
   email: string;
   phone: string;
   status: MemberAccountStatus;
-  membershipPlanName: string | null;
+  planId: string;
   emergencyName: string;
   emergencyPhone: string;
   emergencyRelationship: string;
@@ -119,7 +126,7 @@ function getProfileFields(profile: UserProfile) {
 function profileToForm(
   profile: UserProfile,
   memberStatus: MemberAccountStatus,
-  membershipPlanName: string | null,
+  planId: string,
   memberEmail?: string,
   props?: Pick<ProfileEditFormProps, "firstName" | "lastName" | "email">,
 ): ProfileForm {
@@ -131,7 +138,7 @@ function profileToForm(
     email: memberEmail ?? props?.email ?? "",
     phone: fields.phone ?? "",
     status: memberStatus,
-    membershipPlanName,
+    planId,
     emergencyName: fields.emergencyContact?.name ?? "",
     emergencyPhone: fields.emergencyContact?.phone ?? "",
     emergencyRelationship: fields.emergencyContact?.relationship ?? "",
@@ -158,6 +165,8 @@ export function ProfileEditForm({
   const [savedStatus, setSavedStatus] = useState<MemberAccountStatus | null>(
     null,
   );
+  const [savedPlanId, setSavedPlanId] = useState<string | null>(null);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -169,22 +178,28 @@ export function ProfileEditForm({
     let cancelled = false;
     void (async () => {
       try {
-        const [profile, member] = await Promise.all([
+        const [profile, member, subscription, loadedPlans] = await Promise.all([
           getUserProfile(userId),
           getMember(userId),
+          fetchMemberSubscription(userId),
+          listMembershipPlans(),
         ]);
         if (cancelled) return;
+        const activePlans = loadedPlans.filter((plan) => plan.status === "active");
+        setPlans(activePlans);
         const memberStatus = normalizeMemberAccountStatus(member?.status);
+        const planId = subscription.planId ?? "";
         setForm(
           profileToForm(
             profile,
             memberStatus,
-            member?.membershipPlanName ?? null,
+            planId,
             member?.email,
             { email, firstName, lastName },
           ),
         );
         setSavedStatus(memberStatus);
+        setSavedPlanId(planId);
         setAvatarUrl(getProfileFields(profile).avatarUrl);
       } catch {
         if (!cancelled) setError("Unable to load profile.");
@@ -223,7 +238,7 @@ export function ProfileEditForm({
   }
 
   async function handleSave() {
-    if (!form || savedStatus === null) return;
+    if (!form || savedStatus === null || savedPlanId === null) return;
     setIsSaving(true);
     setError("");
     setSuccess(false);
@@ -236,6 +251,11 @@ export function ProfileEditForm({
       if (shouldPatchMemberStatus(savedStatus, nextStatus)) {
         await updateMemberStatus(userId, nextStatus);
         setSavedStatus(nextStatus);
+      }
+
+      if (form.planId && form.planId !== savedPlanId) {
+        const updated = await updateMemberSubscriptionPlan(userId, form.planId);
+        setSavedPlanId(updated.planId ?? form.planId);
       }
 
       await updateUserProfile(userId, {
@@ -269,6 +289,10 @@ export function ProfileEditForm({
   }
 
   const displayTitle = [form.firstName, form.lastName].filter(Boolean).join(" ");
+  const planOptions = plans.map((plan) => ({
+    value: plan.id,
+    label: `${plan.name} — ${formatPlanPrice(plan)}`,
+  }));
 
   return (
     <div className="space-y-6">
@@ -368,14 +392,23 @@ export function ProfileEditForm({
         <section className="space-y-5">
           <SectionHeading>2. Membership Plan &amp; Status</SectionHeading>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-[13px] font-semibold text-slate-900">
-                Plan Tier
-              </label>
-              <div className="rounded-lg border border-neutral-200 px-3.5 py-2.5 text-sm text-slate-900">
-                {form.membershipPlanName ?? "No plan assigned"}
-              </div>
-            </div>
+            <Select
+              label="Plan Tier"
+              value={form.planId}
+              onChange={(event) => updateField("planId", event.target.value)}
+              options={
+                planOptions.length > 0
+                  ? [
+                      ...(savedPlanId === ""
+                        ? [{ value: "", label: "No plan assigned" }]
+                        : []),
+                      ...planOptions,
+                    ]
+                  : [{ value: "", label: "No active plans available" }]
+              }
+              disabled={planOptions.length === 0}
+              showRequired={planOptions.length > 0}
+            />
             <Select
               label="Status"
               value={form.status}

@@ -225,6 +225,14 @@ export async function createMember(
   });
 }
 
+export function updateDemoMemberPlan(userId: string, planName: string): void {
+  const member = DEMO_MEMBERS.find((entry) => entry.id === userId);
+  if (!member) {
+    throw new ApiClientError("Member not found.", "NOT_FOUND", 404);
+  }
+  member.membershipPlanName = planName;
+}
+
 export async function updateMemberStatus(
   userId: string,
   status: PatchableMemberAccountStatus,

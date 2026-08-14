@@ -19,6 +19,14 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
     title: "Memberships",
     subtitle: "Plans, pricing, and billing",
   },
+  "/schedule": {
+    title: "Schedule",
+    subtitle: "Classes, calendar, and rosters",
+  },
+  "/schedule/new": {
+    title: "Create Class",
+    subtitle: "Add a recurring class to the calendar",
+  },
 };
 
 interface WorkspaceGlobalBarProps {
@@ -34,6 +42,9 @@ export function WorkspaceGlobalBar({
   const meta =
     memberHeader ??
     PAGE_META[pathname] ??
+    (pathname.includes("/roster")
+      ? { title: "Class Roster", subtitle: "Confirmed attendees and waitlist" }
+      : null) ??
     Object.entries(PAGE_META).find(([href]) =>
       pathname.startsWith(`${href}/`) && href !== "/members",
     )?.[1] ?? {

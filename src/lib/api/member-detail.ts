@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { ApiClientError, apiRequest } from "@/lib/api/client";
 import { demoMembershipsEnabled } from "@/lib/memberships/demo";
 import { getMemberDetailDemo } from "@/lib/members/member-detail-demo";
 import type { MemberSearchResult } from "@/lib/types/member";
@@ -72,11 +72,12 @@ interface MemberCheckInApi {
 }
 
 interface MemberSubscriptionApi {
-  planName: string;
-  priceLabel: string;
-  renewalLabel: string;
+  planId: string | null;
+  planName: string | null;
+  priceLabel: string | null;
+  renewalLabel: string | null;
   features: string[];
-  status: string;
+  status: string | null;
   remainingCredits: number | null;
 }
 
@@ -211,9 +212,10 @@ function mapMembership(
   const credits = subscription.remainingCredits ?? 0;
 
   return {
-    planName: subscription.planName,
-    priceLabel: subscription.priceLabel,
-    renewalLabel: subscription.renewalLabel,
+    planId: subscription.planId,
+    planName: subscription.planName ?? "No plan assigned",
+    priceLabel: subscription.priceLabel ?? "—",
+    renewalLabel: subscription.renewalLabel ?? "—",
     features: subscription.features,
     guestPassesRemaining: credits,
     guestPassesTotal: credits,
@@ -345,6 +347,66 @@ export async function checkInMember(userId: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+export interface MemberSubscriptionSummary {
+  planId: string | null;
+  planName: string | null;
+}
+
+export async function fetchMemberSubscription(
+  userId: string,
+): Promise<MemberSubscriptionSummary> {
+  if (demoMembershipsEnabled()) {
+    const { getMember } = await import("@/lib/api/members");
+    const { listMembershipPlans } = await import("@/lib/api/membership-plans");
+    const member = await getMember(userId);
+    if (!member) {
+      return { planId: null, planName: null };
+    }
+    const plans = await listMembershipPlans();
+    const match = plans.find((plan) => plan.name === member.membershipPlanName);
+    return {
+      planId: match?.id ?? null,
+      planName: member.membershipPlanName,
+    };
+  }
+
+  const subscription = await apiRequest<MemberSubscriptionApi>(
+    `/api/v1/users/${userId}/subscription`,
+  );
+  return {
+    planId: subscription.planId,
+    planName: subscription.planName,
+  };
+}
+
+export async function updateMemberSubscriptionPlan(
+  userId: string,
+  planId: string,
+): Promise<MemberSubscriptionSummary> {
+  if (demoMembershipsEnabled()) {
+    const { demoMemberships } = await import("@/lib/memberships/demo");
+    const plan = demoMemberships.getPlan(planId);
+    if (!plan) {
+      throw new ApiClientError("Membership plan not found.", "NOT_FOUND", 404);
+    }
+    const { updateDemoMemberPlan } = await import("@/lib/api/members");
+    updateDemoMemberPlan(userId, plan.name);
+    return { planId: plan.id, planName: plan.name };
+  }
+
+  const subscription = await apiRequest<MemberSubscriptionApi>(
+    `/api/v1/users/${userId}/subscription/plan`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ planId }),
+    },
+  );
+  return {
+    planId: subscription.planId,
+    planName: subscription.planName,
+  };
 }
 
 export async function fetchMemberMembership(
