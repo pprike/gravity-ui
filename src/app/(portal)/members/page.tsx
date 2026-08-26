@@ -78,13 +78,12 @@ export default function MembersPage() {
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   const loadMembers = useCallback(async (query: string) => {
-    setIsLoading(true);
-    setError(null);
     try {
       const results = await searchMembers(
         query.length >= 2 ? query : undefined,
       );
       setMembers(results);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load members");
       setMembers([]);
@@ -94,7 +93,6 @@ export default function MembersPage() {
   }, []);
 
   useEffect(() => {
-    void loadMembers("");
     void listMembershipPlans()
       .then((plans) => {
         setPlanOptions(plans.map((plan) => plan.name).sort());
@@ -102,7 +100,7 @@ export default function MembersPage() {
       .catch(() => {
         setPlanOptions([]);
       });
-  }, [loadMembers]);
+  }, []);
 
   useEffect(() => {
     if (searchQuery.length > 0 && searchQuery.length < 2) {
@@ -110,8 +108,9 @@ export default function MembersPage() {
     }
 
     const timeout = setTimeout(() => {
+      setIsLoading(true);
       void loadMembers(searchQuery);
-    }, 300);
+    }, searchQuery === "" ? 0 : 300);
 
     return () => clearTimeout(timeout);
   }, [searchQuery, loadMembers]);

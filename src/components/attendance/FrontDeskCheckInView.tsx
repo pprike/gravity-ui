@@ -54,35 +54,40 @@ export function FrontDeskCheckInView() {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   const loadStream = useCallback(async (silent = false) => {
-    if (!silent) {
-      setIsLoading(true);
-    } else {
+    if (silent) {
       setIsRefreshing(true);
     }
-    setError(null);
     try {
       const rows = await fetchTodayCheckIns();
       setStream(rows);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load check-ins");
       setStream([]);
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (silent) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    void loadStream();
+    const initialTimeout = setTimeout(() => {
+      void loadStream();
+    }, 0);
     const interval = setInterval(() => {
       void loadStream(true);
     }, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, [loadStream]);
 
   useEffect(() => {
     if (searchQuery.length > 0 && searchQuery.length < 2) {
-      setSearchResults([]);
       return;
     }
 
@@ -107,6 +112,13 @@ export function FrontDeskCheckInView() {
     () => stream.filter((entry) => entry.membershipStatus !== "ACTIVE").length,
     [stream],
   );
+
+  const visibleSearchResults = useMemo(() => {
+    if (searchQuery.length > 0 && searchQuery.length < 2) {
+      return [];
+    }
+    return searchResults;
+  }, [searchQuery, searchResults]);
 
   async function handleManualCheckIn(member: MemberSearchResult) {
     setIsCheckingIn(true);
@@ -284,14 +296,14 @@ export function FrontDeskCheckInView() {
                 <Loader2 className="size-4 animate-spin" />
                 Searching members…
               </div>
-            ) : searchResults.length === 0 ? (
+            ) : visibleSearchResults.length === 0 ? (
               <p className="px-1 py-2 text-sm text-slate-500">
                 {searchQuery.length >= 2
                   ? "No members match that search."
                   : "Type at least 2 characters to search."}
               </p>
             ) : (
-              searchResults.map((member) => {
+              visibleSearchResults.map((member) => {
                 const inactive = member.membershipStatus !== "active";
                 const isSelected = selectedMember?.id === member.id;
                 return (
