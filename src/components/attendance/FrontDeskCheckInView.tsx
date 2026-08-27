@@ -37,7 +37,7 @@ function sourceLabel(source: string): string {
   return "Manual";
 }
 
-export function FrontDeskCheckInView() {
+export function FrontDeskCheckInView({ embedded = false }: { embedded?: boolean }) {
   const [stream, setStream] = useState<FrontDeskCheckIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -155,26 +155,43 @@ export function FrontDeskCheckInView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Front desk</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Live check-in stream and manual overrides for members without QR.
-          </p>
+      {!embedded ? (
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Front desk</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Live check-in stream and manual overrides for members without QR.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => void loadStream(true)}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            Refresh
+          </Button>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => void loadStream(true)}
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <RefreshCw className="size-4" />
-          )}
-          Refresh
-        </Button>
-      </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => void loadStream(true)}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            Refresh
+          </Button>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card className="overflow-hidden">

@@ -1,7 +1,7 @@
 "use client";
 
-import { FrontDeskCheckInView } from "@/components/attendance/FrontDeskCheckInView";
+import { AttendanceHubView } from "@/components/attendance/AttendanceHubView";
 
 export default function AttendancePage() {
-  return <FrontDeskCheckInView />;
+  return <AttendanceHubView />;
 }

@@ -44,3 +44,43 @@ export const demoFrontDeskCheckIns: FrontDeskCheckIn[] = [
     source: "qr",
   },
 ];
+
+import type {
+  ClassAttendanceEntry,
+  MarkClassAttendancePayload,
+} from "@/lib/types/attendance";
+
+const demoClassAttendance = new Map<string, Map<string, ClassAttendanceEntry>>();
+
+export function demoListClassAttendance(sessionId: string): ClassAttendanceEntry[] {
+  const session = demoClassAttendance.get(sessionId);
+  if (!session) return [];
+  return Array.from(session.values());
+}
+
+export function demoMarkClassAttendance(
+  sessionId: string,
+  payload: MarkClassAttendancePayload,
+): ClassAttendanceEntry {
+  let session = demoClassAttendance.get(sessionId);
+  if (!session) {
+    session = new Map();
+    demoClassAttendance.set(sessionId, session);
+  }
+  const existing = session.get(payload.userId);
+  if (existing?.status === payload.status) {
+    const error = new Error("Attendance is already marked as " + payload.status + ".");
+    (error as Error & { code: string; status: number }).code = "CONFLICT";
+    (error as Error & { code: string; status: number }).status = 409;
+    throw error;
+  }
+  const entry: ClassAttendanceEntry = {
+    userId: payload.userId,
+    status: payload.status,
+    markedAt: new Date().toISOString(),
+    markedBy: "demo-coach",
+    markedByName: "Demo Coach",
+  };
+  session.set(payload.userId, entry);
+  return entry;
+}

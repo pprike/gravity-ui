@@ -13,3 +13,23 @@ export interface ManualCheckInPayload {
   userId: string;
   locationId?: string;
 }
+
+export type ClassAttendanceStatus = "attended" | "late" | "no_show";
+
+export interface ClassAttendanceEntry {
+  userId: string;
+  status: ClassAttendanceStatus;
+  markedAt: string;
+  markedBy: string;
+  markedByName: string | null;
+}
+
+export interface MarkClassAttendancePayload {
+  userId: string;
+  status: ClassAttendanceStatus;
+}
+
+export interface QrCheckInPayload {
+  token: string;
+  locationId?: string;
+}
