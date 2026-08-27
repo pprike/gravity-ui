@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Download, Loader2, Printer } from "lucide-react";
+import { ClassMessagePanel } from "@/components/communication/ClassMessagePanel";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -234,6 +235,14 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
             </p>
           </div>
         </div>
+      ) : null}
+
+      {session ? (
+        <ClassMessagePanel
+          sessionId={sessionId}
+          className={session.name}
+          rosterSize={confirmed.length}
+        />
       ) : null}
 
       {attendanceFeedback ? (
