@@ -193,6 +193,7 @@ export function QrScannerView() {
             </p>
             <form className="mt-4 space-y-3" onSubmit={(event) => void handleManualSubmit(event)}>
               <Input
+                label=""
                 value={manualToken}
                 onChange={(event) => setManualToken(event.target.value)}
                 placeholder="gravity-checkin:…"
