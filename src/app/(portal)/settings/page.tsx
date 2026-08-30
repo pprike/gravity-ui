@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { AuditLogsSettings } from "@/components/settings/AuditLogsSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { LocationsSettings } from "@/components/settings/LocationsSettings";
 import { OrganizationSettingsForm } from "@/components/settings/OrganizationSettingsForm";
@@ -27,6 +28,7 @@ function SettingsContent() {
           </p>
         </Card>
       )}
+      {tab === "audit-logs" && <AuditLogsSettings />}
     </SettingsLayout>
   );
 }

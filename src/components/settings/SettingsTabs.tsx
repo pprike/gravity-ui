@@ -15,6 +15,7 @@ export const SETTINGS_TABS: Array<{
   { id: "booking-rules", label: "Booking Rules" },
   { id: "branding", label: "Branding" },
   { id: "notifications", label: "Notifications" },
+  { id: "audit-logs", label: "Audit Log" },
 ];
 
 const PAGE_TITLES: Record<SettingsTab, string> = {
@@ -24,6 +25,7 @@ const PAGE_TITLES: Record<SettingsTab, string> = {
   "booking-rules": "Booking Rules",
   branding: "Branding",
   notifications: "Notifications",
+  "audit-logs": "Audit Log",
 };
 
 export function getTabLabel(tab: SettingsTab): string {

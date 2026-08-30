@@ -4,7 +4,8 @@ export type SettingsTab =
   | "staff"
   | "booking-rules"
   | "branding"
-  | "notifications";
+  | "notifications"
+  | "audit-logs";
 
 export interface Organization {
   id: string;
