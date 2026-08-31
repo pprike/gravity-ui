@@ -1,7 +1,8 @@
 import { apiRequest } from "@/lib/api/client";
-import { demoRevenueReport, demoRetentionReport } from "@/lib/reports/demo";
+import { demoLocationComparisonReport, demoRetentionReport, demoRevenueReport } from "@/lib/reports/demo";
 import { demoMembershipsEnabled } from "@/lib/memberships/demo";
 import type {
+  LocationComparisonReport,
   RevenueDateRangePreset,
   RevenueReport,
   RetentionReport,
@@ -54,4 +55,24 @@ export async function getRetentionReport(): Promise<RetentionReport> {
   }
 
   return apiRequest<RetentionReport>("/api/v1/reports/retention");
+}
+
+export async function getLocationComparisonReport(
+  preset: RevenueDateRangePreset = "30d",
+  locationIds?: string[],
+): Promise<LocationComparisonReport> {
+  if (demoMembershipsEnabled()) {
+    return demoLocationComparisonReport;
+  }
+
+  const { from, to } = resolveDateRange(preset);
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  locationIds?.forEach((id) => params.append("locationIds", id));
+  const query = params.toString();
+
+  return apiRequest<LocationComparisonReport>(
+    `/api/v1/reports/location-comparison${query ? `?${query}` : ""}`,
+  );
 }

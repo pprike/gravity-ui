@@ -1,4 +1,8 @@
-import type { RetentionReport, RevenueReport } from "@/lib/types/reports";
+import type {
+  LocationComparisonReport,
+  RetentionReport,
+  RevenueReport,
+} from "@/lib/types/reports";
 
 export const demoRevenueReport: RevenueReport = {
   currency: "USD",
@@ -54,6 +58,32 @@ export const demoRetentionReport: RetentionReport = {
       lastCheckInAt: "2026-08-10T14:30:00Z",
       daysSinceCheckIn: 20,
       subscriptionStatus: "active",
+    },
+  ],
+};
+
+export const demoLocationComparisonReport: LocationComparisonReport = {
+  currency: "USD",
+  from: "2026-07-31",
+  to: "2026-08-30",
+  totalRevenueCents: 9420000,
+  totalCheckIns: 2840,
+  locations: [
+    {
+      locationId: "loc-1",
+      locationName: "Downtown Club",
+      revenueCents: 5620000,
+      checkIns: 1695,
+      occupancyPercent: 84,
+      sessionsCount: 186,
+    },
+    {
+      locationId: "loc-2",
+      locationName: "Westside Studio",
+      revenueCents: 3800000,
+      checkIns: 1145,
+      occupancyPercent: 76,
+      sessionsCount: 142,
     },
   ],
 };

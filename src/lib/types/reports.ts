@@ -49,4 +49,22 @@ export interface RetentionReport {
   atRiskMembers: AtRiskMember[];
 }
 
-export type ReportsTab = "revenue" | "retention";
+export type ReportsTab = "revenue" | "retention" | "locations";
+
+export interface LocationComparisonRow {
+  locationId: string;
+  locationName: string;
+  revenueCents: number;
+  checkIns: number;
+  occupancyPercent: number;
+  sessionsCount: number;
+}
+
+export interface LocationComparisonReport {
+  currency: string;
+  from: string;
+  to: string;
+  totalRevenueCents: number;
+  totalCheckIns: number;
+  locations: LocationComparisonRow[];
+}

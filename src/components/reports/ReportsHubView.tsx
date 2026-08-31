@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { clsx } from "clsx";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { LocationComparisonReportView } from "@/components/reports/LocationComparisonReportView";
 import { RetentionReportView } from "@/components/reports/RetentionReportView";
 import { RevenueReportView } from "@/components/reports/RevenueReportView";
 import type { ReportsTab } from "@/lib/types/reports";
@@ -10,6 +11,7 @@ import type { ReportsTab } from "@/lib/types/reports";
 const TABS: Array<{ id: ReportsTab; label: string }> = [
   { id: "revenue", label: "Revenue" },
   { id: "retention", label: "Retention" },
+  { id: "locations", label: "Locations" },
 ];
 
 export function ReportsHubView() {
@@ -19,7 +21,7 @@ export function ReportsHubView() {
     <div className="space-y-6">
       <PageHeader
         title="Reports"
-        subtitle="Business performance, revenue, and member retention."
+        subtitle="Business performance, revenue, retention, and location insights."
       />
 
       <nav className="flex flex-wrap gap-2 border-b border-neutral-200 pb-1">
@@ -46,8 +48,10 @@ export function ReportsHubView() {
 
       {activeTab === "revenue" ? (
         <RevenueReportView embedded />
-      ) : (
+      ) : activeTab === "retention" ? (
         <RetentionReportView embedded />
+      ) : (
+        <LocationComparisonReportView embedded />
       )}
     </div>
   );
