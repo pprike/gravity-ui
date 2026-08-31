@@ -1,7 +1,11 @@
 import { apiRequest } from "@/lib/api/client";
-import { demoRevenueReport } from "@/lib/reports/demo";
+import { demoRevenueReport, demoRetentionReport } from "@/lib/reports/demo";
 import { demoMembershipsEnabled } from "@/lib/memberships/demo";
-import type { RevenueDateRangePreset, RevenueReport } from "@/lib/types/reports";
+import type {
+  RevenueDateRangePreset,
+  RevenueReport,
+  RetentionReport,
+} from "@/lib/types/reports";
 
 function resolveDateRange(preset: RevenueDateRangePreset): { from?: string; to?: string } {
   const today = new Date();
@@ -42,4 +46,12 @@ export async function getRevenueReport(
   return apiRequest<RevenueReport>(
     `/api/v1/reports/revenue${query ? `?${query}` : ""}`,
   );
+}
+
+export async function getRetentionReport(): Promise<RetentionReport> {
+  if (demoMembershipsEnabled()) {
+    return demoRetentionReport;
+  }
+
+  return apiRequest<RetentionReport>("/api/v1/reports/retention");
 }

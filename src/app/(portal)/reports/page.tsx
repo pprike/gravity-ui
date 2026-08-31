@@ -1,7 +1,7 @@
 "use client";
 
-import { RevenueReportView } from "@/components/reports/RevenueReportView";
+import { ReportsHubView } from "@/components/reports/ReportsHubView";
 
 export default function ReportsPage() {
-  return <RevenueReportView />;
+  return <ReportsHubView />;
 }

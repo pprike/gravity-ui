@@ -23,7 +23,7 @@ function formatMonthLabel(month: string) {
   return date.toLocaleDateString("en-US", { month: "short" });
 }
 
-export function RevenueReportView() {
+export function RevenueReportView({ embedded = false }: { embedded?: boolean }) {
   const [preset, setPreset] = useState<RevenueDateRangePreset>("6mo");
   const [data, setData] = useState<RevenueReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,10 +64,12 @@ export function RevenueReportView() {
   if (error || !data) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="Revenue"
-          subtitle="Track MRR, collected payments, and monthly trends."
-        />
+        {!embedded ? (
+          <PageHeader
+            title="Revenue"
+            subtitle="Track MRR, collected payments, and monthly trends."
+          />
+        ) : null}
         <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-6 py-16 text-center">
           <BarChart3 className="mx-auto mb-4 size-8 text-primary-600" />
           <p className="text-sm text-neutral-600">{error ?? "Report unavailable."}</p>
@@ -79,31 +81,43 @@ export function RevenueReportView() {
   const revenueDelta = formatDeltaPercent(data.mtdCents, data.priorMtdCents);
   const revenuePositive = data.mtdCents >= data.priorMtdCents;
 
+  const rangeFilters = (
+    <div className="flex flex-wrap gap-2">
+      {RANGE_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => setPreset(option.value)}
+          className={clsx(
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+            preset === option.value
+              ? "bg-primary-600 text-white"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Revenue"
-        subtitle="Track MRR, collected payments, and monthly trends."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {RANGE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setPreset(option.value)}
-                className={clsx(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  preset === option.value
-                    ? "bg-primary-600 text-white"
-                    : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
+      {embedded ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Revenue metrics</h2>
+            <p className="text-sm text-slate-500">MRR, payments, and monthly trends</p>
           </div>
-        }
-      />
+          {rangeFilters}
+        </div>
+      ) : (
+        <PageHeader
+          title="Revenue"
+          subtitle="Track MRR, collected payments, and monthly trends."
+          actions={rangeFilters}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
