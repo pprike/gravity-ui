@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/api/client";
 import { demoSettings, isDemoSession } from "@/lib/settings/demo";
-import type { Role, StaffMember, UserRoles } from "@/lib/types/settings";
+import type { InviteStaffPayload, Role, StaffMember, UserRoles } from "@/lib/types/settings";
 
 export async function listRoles(): Promise<Role[]> {
   if (isDemoSession()) return demoSettings.getRoles();
@@ -35,6 +35,33 @@ export async function assignUserRoles(
 
 export async function listStaff(): Promise<StaffMember[]> {
   if (isDemoSession()) return demoSettings.getStaff();
-  // Staff list endpoint not yet available — return empty until BE ships
-  return [];
+  return apiRequest<StaffMember[]>("/api/v1/staff");
+}
+
+export async function inviteStaff(
+  payload: InviteStaffPayload,
+): Promise<StaffMember & { invitationToken: string }> {
+  if (isDemoSession()) {
+    const role = demoSettings.getRoles().find((entry) => entry.id === payload.roleId);
+    if (!role) {
+      throw new Error("Role not found.");
+    }
+    const member: StaffMember = {
+      id: `staff-${Date.now()}`,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email,
+      roleId: role.id,
+      roleName: role.name,
+      locationIds: payload.locationIds,
+      status: "invited",
+    };
+    demoSettings.saveStaff(member);
+    return { ...member, invitationToken: "demo-invitation-token" };
+  }
+
+  return apiRequest<StaffMember & { invitationToken: string }>("/api/v1/staff/invites", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

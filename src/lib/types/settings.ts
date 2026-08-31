@@ -76,6 +76,14 @@ export interface UpdateBrandingPayload {
   fontFamily?: string;
 }
 
+export interface InviteStaffPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  roleId: string;
+  locationIds: string[];
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -98,12 +106,4 @@ export interface StaffMember {
   roleName: string;
   locationIds: string[];
   status: StaffStatus;
-}
-
-export interface InviteStaffPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  roleId: string;
-  locationIds: string[];
 }

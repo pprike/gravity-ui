@@ -6,6 +6,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { listLocations } from "@/lib/api/locations";
 import {
   assignUserRoles,
+  inviteStaff,
   listRoles,
   listStaff,
 } from "@/lib/api/staff";
@@ -145,11 +146,29 @@ export function StaffRolesSettings() {
         demoSettings.saveStaff(member);
         setStaff((prev) => [...prev, member]);
       } else {
-        setError(
-          "Staff invite API is not yet available. Use demo mode to preview this flow.",
-        );
-        setIsSaving(false);
-        return;
+        const nameParts = inviteForm.fullName.trim().split(/\s+/);
+        const firstName = nameParts[0] ?? "";
+        const lastName = nameParts.slice(1).join(" ") || firstName;
+        const invited = await inviteStaff({
+          firstName,
+          lastName,
+          email: inviteForm.email.trim(),
+          roleId: role.id,
+          locationIds: inviteForm.locationIds,
+        });
+        setStaff((prev) => [
+          ...prev,
+          {
+            id: invited.id,
+            firstName: invited.firstName,
+            lastName: invited.lastName,
+            email: invited.email,
+            roleId: invited.roleId,
+            roleName: invited.roleName,
+            locationIds: invited.locationIds,
+            status: invited.status,
+          },
+        ]);
       }
       setPanelOpen(false);
       setInviteForm({ ...EMPTY_INVITE, roleId: roles[0]?.id ?? "" });
@@ -192,17 +211,6 @@ export function StaffRolesSettings() {
           Invite Staff
         </Button>
       </div>
-
-      {!isDemoSession() && staff.length === 0 && (
-        <Card className="mb-4 border-amber-200 bg-amber-50">
-          <p className="text-sm text-amber-800">
-            Staff listing requires a backend endpoint that is not yet available.
-            Role assignment is wired to{" "}
-            <code className="text-xs">PUT /api/v1/users/&#123;id&#125;/roles</code>.
-            Use demo mode to preview the full staff management UI.
-          </p>
-        </Card>
-      )}
 
       {error && !panelOpen && (
         <p className="mb-4 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700" role="alert">
