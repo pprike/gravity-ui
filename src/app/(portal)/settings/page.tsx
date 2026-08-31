@@ -8,6 +8,7 @@ import { NotificationsSettings } from "@/components/settings/NotificationsSettin
 import { OrganizationSettingsForm } from "@/components/settings/OrganizationSettingsForm";
 import { SettingsLayout } from "@/components/settings/SettingsLayout";
 import { StaffRolesSettings } from "@/components/settings/StaffRolesSettings";
+import { StoreListingSettings } from "@/components/settings/StoreListingSettings";
 import { BookingRulesSettings } from "@/components/memberships/BookingRulesSettings";
 import { useSettingsTab } from "@/components/settings/SettingsTabs";
 
@@ -21,6 +22,7 @@ function SettingsContent() {
       {tab === "staff" && <StaffRolesSettings />}
       {tab === "booking-rules" && <BookingRulesSettings embedded />}
       {tab === "branding" && <BrandingSettings />}
+      {tab === "store-listing" && <StoreListingSettings />}
       {tab === "notifications" && <NotificationsSettings />}
       {tab === "audit-logs" && <AuditLogsSettings />}
     </SettingsLayout>

@@ -14,6 +14,7 @@ export const SETTINGS_TABS: Array<{
   { id: "staff", label: "Staff & Roles" },
   { id: "booking-rules", label: "Booking Rules" },
   { id: "branding", label: "Branding" },
+  { id: "store-listing", label: "App Store" },
   { id: "notifications", label: "Notifications" },
   { id: "audit-logs", label: "Audit Log" },
 ];
@@ -24,6 +25,7 @@ const PAGE_TITLES: Record<SettingsTab, string> = {
   staff: "Staff & Roles",
   "booking-rules": "Booking Rules",
   branding: "Branding",
+  "store-listing": "App Store Listing",
   notifications: "Notifications",
   "audit-logs": "Audit Log",
 };

@@ -4,6 +4,7 @@ export type SettingsTab =
   | "staff"
   | "booking-rules"
   | "branding"
+  | "store-listing"
   | "notifications"
   | "audit-logs";
 
