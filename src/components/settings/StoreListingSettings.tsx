@@ -265,12 +265,13 @@ export function StoreListingSettings() {
 
       <ValidationPanel issues={validationIssues} />
 
-      <Card className="p-6">
-        <FormSection
-          title="App identity"
-          description="Bundle identifiers and support links used by the mobile app."
-        >
-          <div className="grid gap-4 md:grid-cols-2">
+      <Card className="p-6 space-y-6">
+        <div>
+          <FormSection
+            title="App identity"
+            description="Bundle identifiers and support links used by the mobile app."
+          />
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Input
               label="App name"
               value={form.appName}
@@ -316,15 +317,16 @@ export function StoreListingSettings() {
               onChange={(event) => updateField("termsUrl", event.target.value)}
             />
           </div>
-        </FormSection>
+        </div>
 
         <FormDivider />
 
-        <FormSection
-          title="Store listing"
-          description="Titles, descriptions, and asset URLs for App Store Connect and Google Play."
-        >
-          <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <FormSection
+            title="Store listing"
+            description="Titles, descriptions, and asset URLs for App Store Connect and Google Play."
+          />
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Input
               label={`Store title (${charCounts.appStoreTitle}/30)`}
               value={form.appStoreTitle}
@@ -401,9 +403,9 @@ export function StoreListingSettings() {
               />
             </div>
           </div>
-        </FormSection>
+        </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="flex justify-end">
           <Button onClick={() => void handleSave()} disabled={isSaving}>
             {isSaving ? (
               <>

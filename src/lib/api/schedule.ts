@@ -26,8 +26,10 @@ async function enrichSessions(sessions: ClassSession[]): Promise<ClassSession[]>
   const coachNames = new Map(
     staff.map((member) => [member.id, staffDisplayName(member)]),
   );
-  for (const coach of DEMO_COACHES) {
-    if (!coachNames.has(coach.id)) coachNames.set(coach.id, coach.name);
+  if (demoMembershipsEnabled()) {
+    for (const coach of DEMO_COACHES) {
+      if (!coachNames.has(coach.id)) coachNames.set(coach.id, coach.name);
+    }
   }
 
   return sessions.map((session) => ({

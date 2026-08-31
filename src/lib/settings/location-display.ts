@@ -1,4 +1,5 @@
 import type { Location } from "@/lib/types/settings";
+import { isDemoSession } from "@/lib/settings/demo";
 
 const DEMO_MEMBER_COUNTS: Record<string, number> = {
   "loc-1": 312,
@@ -17,9 +18,11 @@ export function getLocationPhone(location: Location): string | null {
 }
 
 export function getLocationMemberLabel(location: Location): string | null {
-  const demoCount = DEMO_MEMBER_COUNTS[location.id];
-  if (demoCount !== undefined) {
-    return `${demoCount} active members`;
+  if (isDemoSession()) {
+    const demoCount = DEMO_MEMBER_COUNTS[location.id];
+    if (demoCount !== undefined) {
+      return `${demoCount} active members`;
+    }
   }
   if (location.capacity != null) {
     return `Capacity: ${location.capacity}`;

@@ -7,6 +7,7 @@ export interface MemberSearchResult {
   status: string;
   membershipPlanName: string | null;
   membershipStatus: string | null;
+  lastVisitAt?: string | null;
 }
 
 export interface CreateMemberPayload {

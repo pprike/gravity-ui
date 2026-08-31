@@ -21,6 +21,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listMembershipPlans } from "@/lib/api/membership-plans";
 import { searchMembers, updateMemberStatus } from "@/lib/api/members";
 import { ApiClientError } from "@/lib/api/client";
+import { formatLastVisit } from "@/lib/members/format";
 import type {
   MemberSearchResult,
   PatchableMemberAccountStatus,
@@ -43,21 +44,6 @@ const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "disabled", label: "Inactive" },
   { value: "invited", label: "Pending" },
 ];
-
-const DEMO_LAST_VISITS: Record<string, string> = {
-  "demo-member-1": "Aug 4, 2026",
-  "demo-member-2": "Today, 10:14 AM",
-  "demo-member-5": "Yesterday, 6:45 PM",
-  "demo-member-4": "Jul 28, 2026",
-  "demo-member-6": "Aug 2, 2026",
-  "demo-member-7": "Aug 3, 2026",
-  "demo-member-3": "Never",
-  "demo-member-8": "Aug 4, 2026",
-};
-
-function lastVisitLabel(member: MemberSearchResult): string {
-  return DEMO_LAST_VISITS[member.id] ?? "—";
-}
 
 function filterSelectClassName() {
   return "h-10 rounded-lg border border-neutral-200 bg-white px-3 pr-8 text-sm text-slate-700 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20";
@@ -393,7 +379,7 @@ export default function MembersPage() {
                         <p className="inline-flex min-w-0 items-center gap-1.5 text-slate-600">
                           <Clock className="size-3.5 shrink-0 text-slate-400" />
                           <span className="truncate">
-                            {lastVisitLabel(member)}
+                            {formatLastVisit(member.lastVisitAt)}
                           </span>
                         </p>
                       </td>

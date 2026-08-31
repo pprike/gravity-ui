@@ -32,9 +32,6 @@ import { Select } from "@/components/ui/Select";
 
 interface ProfileEditFormProps {
   userId: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
 }
 
 interface ProfileForm {
@@ -128,14 +125,13 @@ function profileToForm(
   memberStatus: MemberAccountStatus,
   planId: string,
   memberEmail?: string,
-  props?: Pick<ProfileEditFormProps, "firstName" | "lastName" | "email">,
 ): ProfileForm {
   const fields = getProfileFields(profile);
   const name = splitDisplayName(fields.displayName);
   return {
-    firstName: props?.firstName ?? name.firstName,
-    lastName: props?.lastName ?? name.lastName,
-    email: memberEmail ?? props?.email ?? "",
+    firstName: name.firstName,
+    lastName: name.lastName,
+    email: memberEmail ?? "",
     phone: fields.phone ?? "",
     status: memberStatus,
     planId,
@@ -153,12 +149,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ProfileEditForm({
-  userId,
-  email,
-  firstName,
-  lastName,
-}: ProfileEditFormProps) {
+export function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<ProfileForm | null>(null);
@@ -195,7 +186,6 @@ export function ProfileEditForm({
             memberStatus,
             planId,
             member?.email,
-            { email, firstName, lastName },
           ),
         );
         setSavedStatus(memberStatus);

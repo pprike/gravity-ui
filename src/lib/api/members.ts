@@ -49,6 +49,7 @@ const DEMO_MEMBERS: MemberSearchResult[] = [
     status: "active",
     membershipPlanName: "Premium Monthly",
     membershipStatus: "active",
+    lastVisitAt: "2026-08-04T18:00:00.000Z",
   },
   {
     id: "demo-member-2",
@@ -59,6 +60,7 @@ const DEMO_MEMBERS: MemberSearchResult[] = [
     status: "active",
     membershipPlanName: "Premium Monthly",
     membershipStatus: "active",
+    lastVisitAt: new Date().toISOString(),
   },
   {
     id: "demo-member-5",
