@@ -4,12 +4,12 @@ import { Suspense } from "react";
 import { AuditLogsSettings } from "@/components/settings/AuditLogsSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { LocationsSettings } from "@/components/settings/LocationsSettings";
+import { NotificationsSettings } from "@/components/settings/NotificationsSettings";
 import { OrganizationSettingsForm } from "@/components/settings/OrganizationSettingsForm";
 import { SettingsLayout } from "@/components/settings/SettingsLayout";
 import { StaffRolesSettings } from "@/components/settings/StaffRolesSettings";
 import { BookingRulesSettings } from "@/components/memberships/BookingRulesSettings";
 import { useSettingsTab } from "@/components/settings/SettingsTabs";
-import { Card } from "@/components/ui/Card";
 
 function SettingsContent() {
   const tab = useSettingsTab();
@@ -21,13 +21,7 @@ function SettingsContent() {
       {tab === "staff" && <StaffRolesSettings />}
       {tab === "booking-rules" && <BookingRulesSettings embedded />}
       {tab === "branding" && <BrandingSettings />}
-      {tab === "notifications" && (
-        <Card className="text-center">
-          <p className="text-body text-neutral-600">
-            Notification preferences are coming soon.
-          </p>
-        </Card>
-      )}
+      {tab === "notifications" && <NotificationsSettings />}
       {tab === "audit-logs" && <AuditLogsSettings />}
     </SettingsLayout>
   );

@@ -53,4 +53,37 @@ export interface UpdateBookingRulesPayload {
   waitlistEnabled: boolean;
 }
 
-export type MembershipsTab = "plans" | "booking-rules";
+export type MembershipsTab = "plans" | "assignments" | "billing";
+
+export type SubscriptionStatus = "active" | "paused" | "cancelled";
+
+export interface MemberSubscriptionAssignment {
+  subscriptionId: string;
+  userId: string;
+  memberName: string;
+  memberEmail: string;
+  planId: string;
+  planName: string;
+  status: SubscriptionStatus;
+  startedAt: string;
+  updatedAt: string;
+}
+
+export interface BillingTransactionSummary {
+  id: string;
+  userId: string | null;
+  memberName: string;
+  description: string;
+  amountCents: number;
+  currency: string;
+  status: string;
+  stripeCustomerId: string | null;
+  createdAt: string;
+}
+
+export interface BillingOverview {
+  activeCount: number;
+  pastDueCount: number;
+  cancelledCount: number;
+  recentTransactions: BillingTransactionSummary[];
+}

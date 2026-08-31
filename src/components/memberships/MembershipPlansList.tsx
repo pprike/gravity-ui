@@ -25,7 +25,7 @@ import { PlanStatusPill } from "@/components/memberships/PlanStatusPill";
 const TABLE_COLUMNS =
   "grid grid-cols-[minmax(0,1fr)_120px_140px_140px_150px_120px_140px] items-center gap-4";
 
-export function MembershipPlansList() {
+export function MembershipPlansList({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,20 +108,22 @@ export function MembershipPlansList() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Membership Plans"
-        subtitle={pageSubtitle || undefined}
-        actions={
-          <Button
-            type="button"
-            className="font-bold"
-            onClick={() => router.push("/memberships/new")}
-          >
-            <Plus className="h-4 w-4" />
-            Create Plan
-          </Button>
-        }
-      />
+      {!embedded ? (
+        <PageHeader
+          title="Membership Plans"
+          subtitle={pageSubtitle || undefined}
+          actions={
+            <Button
+              type="button"
+              className="font-bold"
+              onClick={() => router.push("/memberships/new")}
+            >
+              <Plus className="h-4 w-4" />
+              Create Plan
+            </Button>
+          }
+        />
+      ) : null}
 
       {error && (
         <Card className="border-danger-200 bg-danger-50">
