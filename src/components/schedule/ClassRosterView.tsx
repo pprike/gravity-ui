@@ -11,7 +11,7 @@ import {
   markClassAttendance,
 } from "@/lib/api/attendance";
 import { ApiClientError } from "@/lib/api/client";
-import { getClassSession, listClassRoster } from "@/lib/api/schedule";
+import { getClassSession, listClassRoster, promoteWaitlistMember, removeWaitlistMember } from "@/lib/api/schedule";
 import { formatSessionDateTime } from "@/lib/schedule/format";
 import type {
   ClassAttendanceEntry,
@@ -81,6 +81,12 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
   const [markingUserId, setMarkingUserId] = useState<string | null>(null);
   const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(null);
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
+  const [waitlistActionUserId, setWaitlistActionUserId] = useState<string | null>(null);
+
+  const reloadRoster = useCallback(async () => {
+    const loadedRoster = await listClassRoster(sessionId);
+    setRoster(loadedRoster);
+  }, [sessionId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +147,46 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
       }
     },
     [sessionId],
+  );
+
+  const handlePromoteWaitlist = useCallback(
+    async (userId: string) => {
+      setWaitlistActionUserId(userId);
+      setError(null);
+      try {
+        await promoteWaitlistMember(sessionId, userId);
+        await reloadRoster();
+        const loadedSession = await getClassSession(sessionId);
+        if (loadedSession) setSession(loadedSession);
+      } catch (err) {
+        setError(
+          err instanceof ApiClientError ? err.message : "Unable to promote waitlisted member.",
+        );
+      } finally {
+        setWaitlistActionUserId(null);
+      }
+    },
+    [reloadRoster, sessionId],
+  );
+
+  const handleRemoveWaitlist = useCallback(
+    async (userId: string) => {
+      setWaitlistActionUserId(userId);
+      setError(null);
+      try {
+        await removeWaitlistMember(sessionId, userId);
+        await reloadRoster();
+        const loadedSession = await getClassSession(sessionId);
+        if (loadedSession) setSession(loadedSession);
+      } catch (err) {
+        setError(
+          err instanceof ApiClientError ? err.message : "Unable to remove waitlisted member.",
+        );
+      } finally {
+        setWaitlistActionUserId(null);
+      }
+    },
+    [reloadRoster, sessionId],
   );
 
   const confirmed = useMemo(
@@ -232,6 +278,9 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
             </p>
             <p className="mt-1 text-sm font-semibold text-primary-700">
               {confirmed.length} / {session.capacity} Confirmed
+              {waitlist.length > 0 || (session.waitlistCount ?? 0) > 0
+                ? ` · ${waitlist.length || session.waitlistCount} Waitlisted`
+                : ""}
             </p>
           </div>
         </div>
@@ -272,6 +321,9 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
           title={`Active Waitlist (${waitlist.length})`}
           rows={waitlist}
           waitlist
+          waitlistActionUserId={waitlistActionUserId}
+          onPromoteWaitlist={handlePromoteWaitlist}
+          onRemoveWaitlist={handleRemoveWaitlist}
         />
       ) : null}
     </div>
@@ -285,6 +337,9 @@ function RosterTable({
   attendanceByUser,
   markingUserId,
   onMarkAttendance,
+  waitlistActionUserId,
+  onPromoteWaitlist,
+  onRemoveWaitlist,
 }: {
   title: string;
   rows: ClassRosterEntry[];
@@ -296,8 +351,12 @@ function RosterTable({
     status: ClassAttendanceStatus,
     displayName: string,
   ) => void;
+  waitlistActionUserId?: string | null;
+  onPromoteWaitlist?: (userId: string) => void;
+  onRemoveWaitlist?: (userId: string) => void;
 }) {
   const showAttendance = !waitlist && attendanceByUser && onMarkAttendance;
+  const showWaitlistActions = waitlist && onPromoteWaitlist && onRemoveWaitlist;
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
@@ -315,6 +374,7 @@ function RosterTable({
               <th className="px-5 py-3">Membership Plan</th>
               <th className="px-5 py-3">Status</th>
               {showAttendance ? <th className="px-5 py-3">Attendance</th> : null}
+              {showWaitlistActions ? <th className="px-5 py-3">Actions</th> : null}
               <th className="px-5 py-3">Booked Time</th>
             </tr>
           </thead>
@@ -322,6 +382,7 @@ function RosterTable({
             {rows.map((row, index) => {
               const currentAttendance = attendanceByUser?.get(row.userId);
               const isMarking = markingUserId === row.userId;
+              const isWaitlistAction = waitlistActionUserId === row.userId;
               return (
                 <tr key={row.bookingId} className="border-b border-neutral-100 last:border-0">
                   <td className="px-5 py-3.5 text-sm text-slate-500">
@@ -374,6 +435,32 @@ function RosterTable({
                             </button>
                           );
                         })}
+                      </div>
+                    </td>
+                  ) : null}
+                  {showWaitlistActions ? (
+                    <td className="px-5 py-3.5">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={isWaitlistAction}
+                          onClick={() => onPromoteWaitlist(row.userId)}
+                        >
+                          {isWaitlistAction ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            "Promote"
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={isWaitlistAction}
+                          onClick={() => onRemoveWaitlist(row.userId)}
+                        >
+                          Remove
+                        </Button>
                       </div>
                     </td>
                   ) : null}

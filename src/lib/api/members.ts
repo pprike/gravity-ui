@@ -4,6 +4,7 @@ import type {
   CreateMemberPayload,
   CreateMemberResult,
   MemberAccountStatus,
+  MemberSearchPage,
   MemberSearchResult,
   PatchableMemberAccountStatus,
   UpdateMemberStatusResult,
@@ -153,22 +154,61 @@ function filterDemoMembers(query?: string): MemberSearchResult[] {
   ).map(normalizeMember);
 }
 
-export async function searchMembers(
-  query?: string,
-): Promise<MemberSearchResult[]> {
+export interface SearchMembersOptions {
+  query?: string;
+  status?: string;
+  plan?: string;
+  page?: number;
+  size?: number;
+}
+
+export async function searchMembersPage(
+  options: SearchMembersOptions = {},
+): Promise<MemberSearchPage> {
+  const { query, status, plan, page = 0, size = 50 } = options;
+
   if (demoMembershipsEnabled()) {
-    return filterDemoMembers(query);
+    let results = filterDemoMembers(query);
+    if (status && status !== "all") {
+      results = results.filter((member) => member.status === status);
+    }
+    if (plan === "none") {
+      results = results.filter((member) => !member.membershipPlanName);
+    } else if (plan && plan !== "all") {
+      results = results.filter((member) => member.membershipPlanName === plan);
+    }
+    const start = page * size;
+    const items = results.slice(start, start + size);
+    return { items, page, size, total: results.length };
   }
 
   const params = new URLSearchParams();
   if (query && query.trim().length >= 2) {
     params.set("search", query.trim());
   }
+  if (status && status !== "all") {
+    params.set("status", status);
+  }
+  if (plan && plan !== "all") {
+    params.set("plan", plan);
+  }
+  params.set("page", String(page));
+  params.set("size", String(size));
 
-  const path =
-    params.size > 0 ? `/api/v1/users?${params.toString()}` : "/api/v1/users";
-  const results = await apiRequest<MemberSearchResult[]>(path);
-  return results.map(normalizeMember);
+  const response = await apiRequest<MemberSearchPage>(
+    `/api/v1/users?${params.toString()}`,
+  );
+  return {
+    ...response,
+    items: response.items.map(normalizeMember),
+  };
+}
+
+export async function searchMembers(
+  query?: string,
+): Promise<MemberSearchResult[]> {
+  const page = await searchMembersPage({ query, page: 0, size: 50 });
+  return page.items;
 }
 
 export async function getMember(

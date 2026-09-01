@@ -8,6 +8,9 @@ const DEMO_MEMBER_COUNTS: Record<string, number> = {
 };
 
 export function getLocationPhone(location: Location): string | null {
+  if (location.phone) {
+    return location.phone;
+  }
   if (location.addressLine2?.startsWith("tel:")) {
     return location.addressLine2.slice(4);
   }

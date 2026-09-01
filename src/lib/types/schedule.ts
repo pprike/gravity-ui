@@ -34,6 +34,16 @@ export interface ClassTemplate {
   status: "active" | "inactive" | string;
 }
 
+export interface CreateClassSessionPayload {
+  locationId: string;
+  coachUserId: string;
+  name: string;
+  description?: string;
+  startsAt: string;
+  durationMinutes: number;
+  capacity: number;
+}
+
 export interface CreateClassTemplatePayload {
   locationId: string;
   coachUserId: string;

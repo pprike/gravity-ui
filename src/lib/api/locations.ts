@@ -21,6 +21,7 @@ export async function createLocation(
       name: payload.name,
       addressLine1: payload.addressLine1 ?? null,
       addressLine2: payload.addressLine2 ?? null,
+      phone: payload.phone ?? null,
       city: payload.city ?? null,
       region: payload.region ?? null,
       postalCode: payload.postalCode ?? null,

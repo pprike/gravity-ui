@@ -7,6 +7,7 @@ import type {
   ClassRosterEntry,
   ClassSession,
   ClassTemplate,
+  CreateClassSessionPayload,
   CreateClassTemplatePayload,
   UpdateClassSessionPayload,
 } from "@/lib/types/schedule";
@@ -87,6 +88,21 @@ export async function listClassRoster(
   );
 }
 
+export async function createClassSession(
+  payload: CreateClassSessionPayload,
+): Promise<ClassSession> {
+  if (demoMembershipsEnabled()) {
+    return demoSchedule.createSession(payload);
+  }
+
+  const session = await apiRequest<ClassSession>("/api/v1/class-sessions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  const [enriched] = await enrichSessions([session]);
+  return enriched;
+}
+
 export async function createClassTemplate(
   payload: CreateClassTemplatePayload,
 ): Promise<ClassTemplate> {
@@ -120,6 +136,31 @@ export async function updateClassSession(
   );
   const [enriched] = await enrichSessions([session]);
   return enriched;
+}
+
+export async function promoteWaitlistMember(
+  sessionId: string,
+  userId: string,
+): Promise<void> {
+  if (demoMembershipsEnabled()) {
+    return;
+  }
+  await apiRequest<void>(
+    `/api/v1/class-sessions/${sessionId}/waitlist/${userId}/promote`,
+    { method: "POST" },
+  );
+}
+
+export async function removeWaitlistMember(
+  sessionId: string,
+  userId: string,
+): Promise<void> {
+  if (demoMembershipsEnabled()) {
+    return;
+  }
+  await apiRequest<void>(`/api/v1/class-sessions/${sessionId}/waitlist/${userId}`, {
+    method: "DELETE",
+  });
 }
 
 export async function cancelClassSession(sessionId: string): Promise<ClassSession> {

@@ -10,6 +10,13 @@ export interface MemberSearchResult {
   lastVisitAt?: string | null;
 }
 
+export interface MemberSearchPage {
+  items: MemberSearchResult[];
+  page: number;
+  size: number;
+  total: number;
+}
+
 export interface CreateMemberPayload {
   email: string;
   displayName: string;

@@ -19,7 +19,7 @@ import { displayStatus, MemberStatusPill } from "@/components/members/MemberStat
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listMembershipPlans } from "@/lib/api/membership-plans";
-import { searchMembers, updateMemberStatus } from "@/lib/api/members";
+import { searchMembersPage, updateMemberStatus } from "@/lib/api/members";
 import { ApiClientError } from "@/lib/api/client";
 import { formatLastVisit } from "@/lib/members/format";
 import type {
@@ -49,8 +49,12 @@ function filterSelectClassName() {
   return "h-10 rounded-lg border border-neutral-200 bg-white px-3 pr-8 text-sm text-slate-700 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20";
 }
 
+const PAGE_SIZE = 50;
+
 export default function MembersPage() {
   const [members, setMembers] = useState<MemberSearchResult[]>([]);
+  const [totalMembers, setTotalMembers] = useState(0);
+  const [page, setPage] = useState(0);
   const [planOptions, setPlanOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -63,20 +67,29 @@ export default function MembersPage() {
   );
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
-  const loadMembers = useCallback(async (query: string) => {
-    try {
-      const results = await searchMembers(
-        query.length >= 2 ? query : undefined,
-      );
-      setMembers(results);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load members");
-      setMembers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const loadMembers = useCallback(
+    async (query: string, status: StatusFilter, plan: string, pageIndex: number) => {
+      try {
+        const results = await searchMembersPage({
+          query: query.length >= 2 ? query : undefined,
+          status: status === "all" ? undefined : status,
+          plan: plan === "all" ? undefined : plan,
+          page: pageIndex,
+          size: PAGE_SIZE,
+        });
+        setMembers(results.items);
+        setTotalMembers(results.total);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load members");
+        setMembers([]);
+        setTotalMembers(0);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     void listMembershipPlans()
@@ -95,11 +108,11 @@ export default function MembersPage() {
 
     const timeout = setTimeout(() => {
       setIsLoading(true);
-      void loadMembers(searchQuery);
+      void loadMembers(searchQuery, statusFilter, planFilter, page);
     }, searchQuery === "" ? 0 : 300);
 
     return () => clearTimeout(timeout);
-  }, [searchQuery, loadMembers]);
+  }, [searchQuery, statusFilter, planFilter, page, loadMembers]);
 
   const availablePlans = useMemo(() => {
     const fromMembers = members
@@ -108,31 +121,20 @@ export default function MembersPage() {
     return [...new Set([...planOptions, ...fromMembers])].sort();
   }, [members, planOptions]);
 
-  const filteredMembers = useMemo(() => {
-    return members.filter((member) => {
-      if (statusFilter !== "all" && member.status !== statusFilter) {
-        return false;
-      }
-
-      if (planFilter === "none") {
-        return !member.membershipPlanName;
-      }
-
-      if (planFilter !== "all" && member.membershipPlanName !== planFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [members, planFilter, statusFilter]);
+  const filteredMembers = members;
 
   const hasActiveFilters =
     searchQuery.length > 0 || statusFilter !== "all" || planFilter !== "all";
+
+  const totalPages = Math.max(1, Math.ceil(totalMembers / PAGE_SIZE));
+  const showingFrom = totalMembers === 0 ? 0 : page * PAGE_SIZE + 1;
+  const showingTo = Math.min((page + 1) * PAGE_SIZE, totalMembers);
 
   function resetFilters() {
     setSearchQuery("");
     setStatusFilter("all");
     setPlanFilter("all");
+    setPage(0);
   }
 
   function requestStatusChange(
@@ -207,7 +209,10 @@ export default function MembersPage() {
             <input
               type="search"
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setPage(0);
+              }}
               placeholder="Search members, emails..."
               className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
               aria-label="Search members"
@@ -216,9 +221,10 @@ export default function MembersPage() {
 
           <select
             value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value as StatusFilter)
-            }
+            onChange={(event) => {
+              setStatusFilter(event.target.value as StatusFilter);
+              setPage(0);
+            }}
             className={filterSelectClassName() + " shrink-0"}
             aria-label="Filter by status"
           >
@@ -231,7 +237,10 @@ export default function MembersPage() {
 
           <select
             value={planFilter}
-            onChange={(event) => setPlanFilter(event.target.value)}
+            onChange={(event) => {
+              setPlanFilter(event.target.value);
+              setPage(0);
+            }}
             className={filterSelectClassName() + " shrink-0"}
             aria-label="Filter by membership plan"
           >
@@ -433,18 +442,25 @@ export default function MembersPage() {
       {!isLoading && !error && filteredMembers.length > 0 && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">
-            Showing {filteredMembers.length} member
-            {filteredMembers.length === 1 ? "" : "s"}
-            {hasActiveFilters && members.length !== filteredMembers.length
-              ? ` (filtered from ${members.length})`
-              : ""}
+            Showing {showingFrom}-{showingTo} of {totalMembers} member
+            {totalMembers === 1 ? "" : "s"}
           </p>
           <div className="flex gap-2">
-            <Button variant="secondary" type="button" disabled>
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={page === 0}
+              onClick={() => setPage((current) => Math.max(current - 1, 0))}
+            >
               <ChevronLeft className="size-3.5" />
               Previous
             </Button>
-            <Button variant="secondary" type="button" disabled>
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={page + 1 >= totalPages}
+              onClick={() => setPage((current) => current + 1)}
+            >
               Next
               <ChevronRight className="size-3.5" />
             </Button>

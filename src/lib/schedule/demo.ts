@@ -3,6 +3,7 @@ import type {
   ClassRosterEntry,
   ClassSession,
   ClassTemplate,
+  CreateClassSessionPayload,
   CreateClassTemplatePayload,
   UpdateClassSessionPayload,
 } from "@/lib/types/schedule";
@@ -311,6 +312,33 @@ export const demoSchedule = {
 
     writeStore(store);
     return template;
+  },
+  createSession(payload: CreateClassSessionPayload): ClassSession {
+    const store = readStore();
+    const endsAt = new Date(
+      new Date(payload.startsAt).getTime() + payload.durationMinutes * 60_000,
+    ).toISOString();
+    const session: ClassSession = {
+      id: `session-oneoff-${Date.now()}`,
+      tenantId: "demo-org",
+      templateId: "",
+      locationId: payload.locationId,
+      coachUserId: payload.coachUserId,
+      name: payload.name,
+      description: payload.description ?? null,
+      startsAt: payload.startsAt,
+      endsAt,
+      capacity: payload.capacity,
+      bookedCount: 0,
+      status: "scheduled",
+      bookedByMe: false,
+      coachName: coachName(payload.coachUserId),
+      locationName: LOCATION_NAME,
+      waitlistCount: 0,
+    };
+    store.createdSessions.push(session);
+    writeStore(store);
+    return session;
   },
   updateSession(sessionId: string, payload: UpdateClassSessionPayload): ClassSession {
     const store = readStore();

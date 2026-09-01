@@ -95,16 +95,15 @@ export function LocationsSettings() {
     setError("");
     try {
       const capacity = form.capacity ? parseInt(form.capacity, 10) : undefined;
-      const phoneValue = form.phone.trim()
-        ? `tel:${form.phone.trim()}`
-        : undefined;
+      const phone = form.phone.trim() || undefined;
 
       if (editingId) {
         const existing = locations.find((l) => l.id === editingId);
         await updateLocation(editingId, {
           name: form.name.trim(),
           addressLine1: form.addressLine1.trim() || undefined,
-          addressLine2: phoneValue,
+          addressLine2: existing?.addressLine2 ?? undefined,
+          phone,
           city: existing?.city ?? undefined,
           region: existing?.region ?? undefined,
           postalCode: existing?.postalCode ?? undefined,
@@ -117,7 +116,7 @@ export function LocationsSettings() {
         await createLocation({
           name: form.name.trim(),
           addressLine1: form.addressLine1.trim() || undefined,
-          addressLine2: phoneValue,
+          phone,
           timezone: "America/Chicago",
           capacity,
           status: "active",
@@ -144,6 +143,7 @@ export function LocationsSettings() {
         name: location.name,
         addressLine1: location.addressLine1 ?? undefined,
         addressLine2: location.addressLine2 ?? undefined,
+        phone: location.phone ?? undefined,
         city: location.city ?? undefined,
         region: location.region ?? undefined,
         postalCode: location.postalCode ?? undefined,

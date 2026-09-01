@@ -28,6 +28,7 @@ export interface Location {
   name: string;
   addressLine1: string | null;
   addressLine2: string | null;
+  phone: string | null;
   city: string | null;
   region: string | null;
   postalCode: string | null;
@@ -41,6 +42,7 @@ export interface CreateLocationPayload {
   name: string;
   addressLine1?: string;
   addressLine2?: string;
+  phone?: string;
   city?: string;
   region?: string;
   postalCode?: string;
@@ -54,6 +56,7 @@ export interface UpdateLocationPayload {
   name: string;
   addressLine1?: string;
   addressLine2?: string;
+  phone?: string;
   city?: string;
   region?: string;
   postalCode?: string;

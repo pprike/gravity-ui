@@ -6,7 +6,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { getBookingRules } from "@/lib/api/booking-rules";
 import { listLocations } from "@/lib/api/locations";
 import { demoMembershipsEnabled } from "@/lib/memberships/demo";
-import { createClassTemplate, listScheduleCoaches } from "@/lib/api/schedule";
+import { createClassSession, createClassTemplate, listScheduleCoaches } from "@/lib/api/schedule";
 import { listStaff } from "@/lib/api/staff";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -34,6 +34,7 @@ interface CreateClassFormState {
   capacity: string;
   description: string;
   startTime: string;
+  startDate: string;
   durationMinutes: string;
   recurring: boolean;
   days: number[];
@@ -47,6 +48,7 @@ const EMPTY: CreateClassFormState = {
   capacity: "20",
   description: "",
   startTime: "09:00",
+  startDate: new Date().toISOString().slice(0, 10),
   durationMinutes: "60",
   recurring: true,
   days: [2],
@@ -67,6 +69,12 @@ function SectionHeading({
       <h3 className="text-base font-bold text-slate-900">{children}</h3>
     </div>
   );
+}
+
+function toStartsAtIso(date: string, time: string): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes).toISOString();
 }
 
 export function CreateClassForm() {
@@ -164,8 +172,8 @@ export function CreateClassForm() {
       setError("Coach and location are required.");
       return;
     }
-    const days = form.recurring ? form.days : [new Date().getDay() || 7];
-    if (days.length === 0) {
+    const days = form.recurring ? form.days : [];
+    if (form.recurring && days.length === 0) {
       setError("Select at least one day.");
       return;
     }
@@ -173,18 +181,30 @@ export function CreateClassForm() {
     setIsSaving(true);
     setError("");
     try {
-      for (const dayOfWeek of days) {
-        await createClassTemplate({
+      if (form.recurring) {
+        for (const dayOfWeek of form.days) {
+          await createClassTemplate({
+            name: form.name.trim(),
+            description: form.description.trim() || undefined,
+            locationId: form.locationId,
+            coachUserId: form.coachUserId,
+            dayOfWeek,
+            startTime: form.startTime,
+            durationMinutes: Number(form.durationMinutes) || 60,
+            capacity: Number(form.capacity) || 20,
+            recurrenceRule: "WEEKLY",
+            status: "active",
+          });
+        }
+      } else {
+        await createClassSession({
           name: form.name.trim(),
           description: form.description.trim() || undefined,
           locationId: form.locationId,
           coachUserId: form.coachUserId,
-          dayOfWeek,
-          startTime: form.startTime,
+          startsAt: toStartsAtIso(form.startDate, form.startTime),
           durationMinutes: Number(form.durationMinutes) || 60,
           capacity: Number(form.capacity) || 20,
-          recurrenceRule: "WEEKLY",
-          status: "active",
         });
       }
       router.push("/schedule");
@@ -262,13 +282,32 @@ export function CreateClassForm() {
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Start Time"
-            type="time"
-            value={form.startTime}
-            onChange={(event) => update("startTime", event.target.value)}
-            showRequired
-          />
+          {form.recurring ? (
+            <Input
+              label="Start Time"
+              type="time"
+              value={form.startTime}
+              onChange={(event) => update("startTime", event.target.value)}
+              showRequired
+            />
+          ) : (
+            <>
+              <Input
+                label="Class Date"
+                type="date"
+                value={form.startDate}
+                onChange={(event) => update("startDate", event.target.value)}
+                showRequired
+              />
+              <Input
+                label="Start Time"
+                type="time"
+                value={form.startTime}
+                onChange={(event) => update("startTime", event.target.value)}
+                showRequired
+              />
+            </>
+          )}
           <Input
             label="Duration (minutes)"
             type="number"
