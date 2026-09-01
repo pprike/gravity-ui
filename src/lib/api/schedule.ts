@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { ApiClientError, apiRequest } from "@/lib/api/client";
 import { listLocations } from "@/lib/api/locations";
 import { listStaff } from "@/lib/api/staff";
 import { demoMembershipsEnabled } from "@/lib/memberships/demo";
@@ -62,13 +62,18 @@ export async function getClassSession(
     return demoSchedule.getSession(sessionId) ?? null;
   }
 
-  const now = new Date();
-  const from = new Date(now);
-  from.setDate(from.getDate() - 60);
-  const to = new Date(now);
-  to.setDate(to.getDate() + 90);
-  const sessions = await listClassSessions(from.toISOString(), to.toISOString());
-  return sessions.find((session) => session.id === sessionId) ?? null;
+  try {
+    const session = await apiRequest<ClassSession>(
+      `/api/v1/class-sessions/${sessionId}`,
+    );
+    const [enriched] = await enrichSessions([session]);
+    return enriched;
+  } catch (err) {
+    if (err instanceof ApiClientError && err.status === 404) {
+      return null;
+    }
+    throw err;
+  }
 }
 
 export async function listClassRoster(
