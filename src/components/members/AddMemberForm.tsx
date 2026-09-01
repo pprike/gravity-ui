@@ -172,19 +172,43 @@ export function AddMemberForm() {
         form.emergencyRelationship.trim();
 
       if (hasEmergencyContact) {
-        await updateUserProfile(created.id, {
-          displayName,
-          phone: form.phone,
-          emergencyContact: {
-            name: form.emergencyName.trim(),
-            phone: form.emergencyPhone.trim(),
-            relationship: form.emergencyRelationship.trim(),
-          },
-        });
+        try {
+          await updateUserProfile(created.id, {
+            displayName,
+            phone: form.phone,
+            emergencyContact: {
+              name: form.emergencyName.trim(),
+              phone: form.emergencyPhone.trim(),
+              relationship: form.emergencyRelationship.trim(),
+            },
+          });
+        } catch (contactError) {
+          const contactMessage =
+            contactError instanceof ApiClientError
+              ? contactError.message
+              : "Unable to save emergency contact.";
+          setError(
+            `Member was created, but the emergency contact could not be saved: ${contactMessage} Open the member profile to update it.`,
+          );
+          router.push(`/members/${created.id}`);
+          return;
+        }
       }
 
       if (avatarFile) {
-        await uploadProfileAvatar(created.id, avatarFile);
+        try {
+          await uploadProfileAvatar(created.id, avatarFile);
+        } catch (avatarError) {
+          const avatarMessage =
+            avatarError instanceof ApiClientError
+              ? avatarError.message
+              : "Unable to upload profile photo.";
+          setError(
+            `Member was created, but the profile photo could not be uploaded: ${avatarMessage} Open the member profile to add a photo.`,
+          );
+          router.push(`/members/${created.id}`);
+          return;
+        }
       }
 
       router.push("/members");
