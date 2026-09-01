@@ -16,7 +16,7 @@ test.describe("Admin portal navigation", () => {
     await sidebarLink(page, "Memberships").click();
     await expect(page).toHaveURL(/\/memberships/);
     await expect(
-      page.getByRole("heading", { name: "Membership Plans" }),
+      page.getByRole("heading", { name: "Memberships" }),
     ).toBeVisible();
 
     await sidebarLink(page, "Communication").click();
