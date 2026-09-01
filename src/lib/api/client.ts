@@ -3,6 +3,7 @@ import {
   getStoredSession,
   storeSession,
 } from "@/lib/auth/storage";
+import { redirectToLogin } from "@/lib/api/session-redirect";
 import type { AuthSession } from "@/lib/types/auth";
 
 const API_BASE =
@@ -33,6 +34,47 @@ export class ApiClientError extends Error {
   }
 }
 
+async function parseApiResponse<T>(
+  response: Response,
+): Promise<ApiResponse<T>> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const text = await response.text();
+
+  if (!text.trim()) {
+    if (!response.ok) {
+      throw new ApiClientError(
+        `Request failed with status ${response.status}.`,
+        "REQUEST_FAILED",
+        response.status,
+      );
+    }
+    return { data: null, meta: {}, error: null };
+  }
+
+  const looksLikeJson =
+    contentType.includes("application/json") || text.trimStart().startsWith("{");
+
+  if (!looksLikeJson) {
+    throw new ApiClientError(
+      response.ok
+        ? "Server returned an unexpected response format."
+        : `Server error (${response.status}). The API may be unavailable or misconfigured.`,
+      "INVALID_RESPONSE",
+      response.status,
+    );
+  }
+
+  try {
+    return JSON.parse(text) as ApiResponse<T>;
+  } catch {
+    throw new ApiClientError(
+      `Server returned an unreadable response (${response.status}).`,
+      "INVALID_JSON",
+      response.status,
+    );
+  }
+}
+
 async function refreshAccessToken(): Promise<AuthSession | null> {
   const session = getStoredSession();
   if (!session?.refreshToken) return null;
@@ -48,12 +90,18 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
     return null;
   }
 
-  const payload = (await response.json()) as ApiResponse<{
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    user: AuthSession["user"];
-  }>;
+  let payload;
+  try {
+    payload = await parseApiResponse<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+      user: AuthSession["user"];
+    }>(response);
+  } catch {
+    clearSession();
+    return null;
+  }
 
   if (!payload.data) {
     clearSession();
@@ -70,6 +118,15 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
 
   storeSession(nextSession);
   return nextSession;
+}
+
+function throwSessionExpired(): never {
+  redirectToLogin();
+  throw new ApiClientError(
+    "Your session has expired. Please sign in again.",
+    "SESSION_EXPIRED",
+    401,
+  );
 }
 
 export async function apiRequest<T>(
@@ -93,14 +150,17 @@ export async function apiRequest<T>(
     headers,
   });
 
-  if (response.status === 401 && retry && session?.refreshToken) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      return apiRequest<T>(path, options, false);
+  if (response.status === 401) {
+    if (retry && session?.refreshToken) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return apiRequest<T>(path, options, false);
+      }
     }
+    throwSessionExpired();
   }
 
-  const payload = (await response.json()) as ApiResponse<T>;
+  const payload = await parseApiResponse<T>(response);
 
   if (!response.ok || payload.error) {
     throw new ApiClientError(
@@ -136,14 +196,17 @@ export async function apiUpload<T>(
     body: formData,
   });
 
-  if (response.status === 401 && retry && session?.refreshToken) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      return apiUpload<T>(path, fieldName, file, false);
+  if (response.status === 401) {
+    if (retry && session?.refreshToken) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return apiUpload<T>(path, fieldName, file, false);
+      }
     }
+    throwSessionExpired();
   }
 
-  const payload = (await response.json()) as ApiResponse<T>;
+  const payload = await parseApiResponse<T>(response);
 
   if (!response.ok || payload.error) {
     throw new ApiClientError(
