@@ -357,6 +357,7 @@ export function ScheduleCalendar() {
         {selected ? (
           <div className="absolute inset-y-0 right-0 z-40 w-[360px] max-w-full border-l border-neutral-200 bg-white shadow-2xl">
             <ClassDetailPanel
+              key={selected.id}
               session={selected}
               onClose={() => setSelectedId(null)}
               onSessionChanged={(updated) => {

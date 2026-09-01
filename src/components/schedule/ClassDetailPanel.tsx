@@ -53,7 +53,8 @@ export function ClassDetailPanel({
   const styles = classTypeStyles(type);
   const waitlist = session.waitlistCount ?? 0;
   const isCancelled = session.status === "cancelled";
-  const isPast = new Date(session.startsAt).getTime() <= Date.now();
+  const [now] = useState(() => Date.now());
+  const isPast = new Date(session.startsAt).getTime() <= now;
   const canManage = !isCancelled && !isPast;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -63,7 +64,7 @@ export function ClassDetailPanel({
   const [error, setError] = useState("");
   const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([]);
   const [coaches, setCoaches] = useState<Array<{ id: string; name: string }>>([]);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     name: session.name,
     locationId: session.locationId,
     coachUserId: session.coachUserId,
@@ -71,9 +72,9 @@ export function ClassDetailPanel({
     durationMinutes: String(durationMinutes(session.startsAt, session.endsAt)),
     capacity: String(session.capacity),
     description: session.description ?? "",
-  });
+  }));
 
-  useEffect(() => {
+  function resetFormFromSession() {
     setForm({
       name: session.name,
       locationId: session.locationId,
@@ -83,10 +84,8 @@ export function ClassDetailPanel({
       capacity: String(session.capacity),
       description: session.description ?? "",
     });
-    setIsEditing(false);
-    setIsMessaging(false);
     setError("");
-  }, [session]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -373,7 +372,10 @@ export function ClassDetailPanel({
               type="button"
               variant="secondary"
               disabled={isEditing || isCancelling}
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                resetFormFromSession();
+                setIsEditing(true);
+              }}
             >
               <Pencil className="size-4" />
               Edit
