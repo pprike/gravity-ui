@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
+import { demoLoginEnabled } from "@/lib/auth/demo";
 import { getDashboardPath } from "@/lib/navigation/config";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -171,7 +172,7 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        {!tenantOptions ? (
+        {!tenantOptions && demoLoginEnabled() ? (
           <Card padding="sm">
             <p className="mb-3 text-sm font-medium text-neutral-800">
               Preview without API

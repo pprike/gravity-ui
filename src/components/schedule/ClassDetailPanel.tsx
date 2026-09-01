@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, Mail, MapPin, Pencil, Trash2, Users, X } from "lucide-react";
+import { ClassMessagePanel } from "@/components/communication/ClassMessagePanel";
 import { ApiClientError } from "@/lib/api/client";
 import { listLocations } from "@/lib/api/locations";
 import {
@@ -56,6 +57,7 @@ export function ClassDetailPanel({
   const canManage = !isCancelled && !isPast;
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState("");
@@ -82,6 +84,7 @@ export function ClassDetailPanel({
       description: session.description ?? "",
     });
     setIsEditing(false);
+    setIsMessaging(false);
     setError("");
   }, [session]);
 
@@ -211,7 +214,13 @@ export function ClassDetailPanel({
           </div>
         ) : null}
 
-        {isEditing ? (
+        {isMessaging ? (
+          <ClassMessagePanel
+            sessionId={session.id}
+            className={session.name}
+            rosterSize={session.bookedCount}
+          />
+        ) : isEditing ? (
           <div className="space-y-4">
             <Input
               label="Class Name"
@@ -381,9 +390,18 @@ export function ClassDetailPanel({
               Cancel
             </Button>
           </div>
-          <Button type="button" disabled fullWidth>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isEditing || isCancelling}
+            onClick={() => {
+              setIsMessaging((current) => !current);
+              setIsEditing(false);
+            }}
+            fullWidth
+          >
             <Mail className="size-4" />
-            Message Class Members
+            {isMessaging ? "Hide Message Form" : "Message Class Members"}
           </Button>
         </div>
       ) : null}
