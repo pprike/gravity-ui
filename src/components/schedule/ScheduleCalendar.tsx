@@ -78,24 +78,22 @@ export function ScheduleCalendar() {
   const rangeFrom = rangeIso(days[0]);
   const rangeTo = rangeIso(days[days.length - 1], true);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const loaded = await listClassSessions(rangeFrom, rangeTo);
-        if (!cancelled) setSessions(loaded);
-      } catch {
-        if (!cancelled) setError("Unable to load the class schedule.");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadSessions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const loaded = await listClassSessions(rangeFrom, rangeTo);
+      setSessions(loaded);
+    } catch {
+      setError("Unable to load the class schedule.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [rangeFrom, rangeTo]);
+
+  useEffect(() => {
+    void loadSessions();
+  }, [loadSessions]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -358,7 +356,17 @@ export function ScheduleCalendar() {
 
         {selected ? (
           <div className="absolute inset-y-0 right-0 z-40 w-[360px] max-w-full border-l border-neutral-200 bg-white shadow-2xl">
-            <ClassDetailPanel session={selected} onClose={() => setSelectedId(null)} />
+            <ClassDetailPanel
+              session={selected}
+              onClose={() => setSelectedId(null)}
+              onSessionChanged={(updated) => {
+                setSessions((current) =>
+                  current.map((session) =>
+                    session.id === updated.id ? { ...session, ...updated } : session,
+                  ),
+                );
+              }}
+            />
           </div>
         ) : null}
       </div>

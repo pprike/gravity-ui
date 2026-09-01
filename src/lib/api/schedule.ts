@@ -8,6 +8,7 @@ import type {
   ClassSession,
   ClassTemplate,
   CreateClassTemplatePayload,
+  UpdateClassSessionPayload,
 } from "@/lib/types/schedule";
 
 function staffDisplayName(staff: {
@@ -95,4 +96,36 @@ export async function createClassTemplate(
 
 export function listScheduleCoaches(): Array<{ id: string; name: string }> {
   return DEMO_COACHES.map((coach) => ({ id: coach.id, name: coach.name }));
+}
+
+export async function updateClassSession(
+  sessionId: string,
+  payload: UpdateClassSessionPayload,
+): Promise<ClassSession> {
+  if (demoMembershipsEnabled()) {
+    return demoSchedule.updateSession(sessionId, payload);
+  }
+
+  const session = await apiRequest<ClassSession>(
+    `/api/v1/class-sessions/${sessionId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+  const [enriched] = await enrichSessions([session]);
+  return enriched;
+}
+
+export async function cancelClassSession(sessionId: string): Promise<ClassSession> {
+  if (demoMembershipsEnabled()) {
+    return demoSchedule.cancelSession(sessionId);
+  }
+
+  const session = await apiRequest<ClassSession>(
+    `/api/v1/class-sessions/${sessionId}/cancel`,
+    { method: "POST" },
+  );
+  const [enriched] = await enrichSessions([session]);
+  return enriched;
 }

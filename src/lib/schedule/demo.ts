@@ -4,6 +4,7 @@ import type {
   ClassSession,
   ClassTemplate,
   CreateClassTemplatePayload,
+  UpdateClassSessionPayload,
 } from "@/lib/types/schedule";
 
 const DEMO_SCHEDULE_KEY = "gravity-demo-schedule-v2";
@@ -310,5 +311,59 @@ export const demoSchedule = {
 
     writeStore(store);
     return template;
+  },
+  updateSession(sessionId: string, payload: UpdateClassSessionPayload): ClassSession {
+    const store = readStore();
+    const sessions = allSessions(store);
+    const existing = sessions.find((session) => session.id === sessionId);
+    if (!existing) {
+      throw new Error("Class session not found.");
+    }
+
+    const endsAt = new Date(
+      new Date(payload.startsAt).getTime() + payload.durationMinutes * 60_000,
+    ).toISOString();
+    const updated: ClassSession = {
+      ...existing,
+      locationId: payload.locationId,
+      coachUserId: payload.coachUserId,
+      name: payload.name,
+      description: payload.description ?? null,
+      startsAt: payload.startsAt,
+      endsAt,
+      capacity: payload.capacity,
+      coachName: coachName(payload.coachUserId),
+    };
+
+    const createdIndex = store.createdSessions.findIndex(
+      (session) => session.id === sessionId,
+    );
+    if (createdIndex >= 0) {
+      store.createdSessions[createdIndex] = updated;
+      writeStore(store);
+      return updated;
+    }
+
+    store.createdSessions.push(updated);
+    writeStore(store);
+    return updated;
+  },
+  cancelSession(sessionId: string): ClassSession {
+    const store = readStore();
+    const existing = allSessions(store).find((session) => session.id === sessionId);
+    if (!existing) {
+      throw new Error("Class session not found.");
+    }
+    const updated: ClassSession = { ...existing, status: "cancelled", bookedCount: 0 };
+    const createdIndex = store.createdSessions.findIndex(
+      (session) => session.id === sessionId,
+    );
+    if (createdIndex >= 0) {
+      store.createdSessions[createdIndex] = updated;
+    } else {
+      store.createdSessions.push(updated);
+    }
+    writeStore(store);
+    return updated;
   },
 };

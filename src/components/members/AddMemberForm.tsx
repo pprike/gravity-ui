@@ -6,6 +6,7 @@ import { Calendar, User } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import { listMembershipPlans } from "@/lib/api/membership-plans";
 import { createMember } from "@/lib/api/members";
+import { updateMemberSubscriptionPlan } from "@/lib/api/member-detail";
 import { updateUserProfile, uploadProfileAvatar } from "@/lib/api/profile";
 import { formatPlanPrice } from "@/lib/memberships/format";
 import type { MembershipPlan } from "@/lib/types/memberships";
@@ -127,7 +128,6 @@ export function AddMemberForm() {
     }
     if (!form.phone.trim()) errors.phone = "Phone number is required.";
     if (!form.planId) errors.planId = "Select a membership plan.";
-    if (!form.startDate) errors.startDate = "Start date is required.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -151,6 +151,20 @@ export function AddMemberForm() {
         displayName,
         phone: form.phone,
       });
+
+      try {
+        await updateMemberSubscriptionPlan(created.id, form.planId);
+      } catch (planError) {
+        const planMessage =
+          planError instanceof ApiClientError
+            ? planError.message
+            : "Unable to assign the membership plan.";
+        setError(
+          `Member was created, but the membership plan could not be assigned: ${planMessage} Open the member profile to assign a plan.`,
+        );
+        router.push(`/members/${created.id}`);
+        return;
+      }
 
       const hasEmergencyContact =
         form.emergencyName.trim() ||
@@ -311,7 +325,6 @@ export function AddMemberForm() {
               className="block text-[13px] font-medium text-slate-800"
             >
               Membership Start Date
-              <span className="ml-0.5 text-danger-600">*</span>
             </label>
             <div className="relative">
               <input
