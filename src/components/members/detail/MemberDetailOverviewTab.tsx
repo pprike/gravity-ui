@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronRight, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import type { MemberDetailData } from "@/lib/types/member-detail";
 import type { MemberSearchResult } from "@/lib/types/member";
 
@@ -106,10 +107,10 @@ export function MemberDetailOverviewTab({
           ) : (
             <ul className="mt-4 divide-y divide-neutral-100">
               {detail.overview.upcomingBookings.map((booking) => (
-                <li key={booking.title}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-slate-50"
+                <li key={`${booking.title}-${booking.subtitle}`}>
+                  <Link
+                    href="/schedule"
+                    className="flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-slate-900">
@@ -120,7 +121,7 @@ export function MemberDetailOverviewTab({
                       </p>
                     </div>
                     <ChevronRight className="size-4 shrink-0 text-slate-400" />
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -19,12 +19,14 @@ export function MemberDetailAttendanceTab({
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setIsLoading(true);
+      setError(null);
       try {
         const data = await fetchMemberAttendance(
           userId,
@@ -32,6 +34,12 @@ export function MemberDetailAttendanceTab({
           month.getFullYear(),
         );
         if (!cancelled) setAttendance(data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load attendance",
+          );
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -72,6 +80,14 @@ export function MemberDetailAttendanceTab({
     setMonth(
       (current) =>
         new Date(current.getFullYear(), current.getMonth() + delta, 1),
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="py-16 text-center text-sm text-danger-700" role="alert">
+        {error}
+      </p>
     );
   }
 

@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, CreditCard, Loader2 } from "lucide-react";
+import { Check, CreditCard, Loader2 } from "lucide-react";
 import { BillingStatusPill } from "@/components/members/detail/MemberDetailBadges";
-import { fetchMemberMembership } from "@/lib/api/member-detail";
+import { ApiClientError } from "@/lib/api/client";
+import { listMembershipPlans } from "@/lib/api/membership-plans";
+import {
+  fetchMemberMembership,
+  updateMemberSubscriptionPlan,
+} from "@/lib/api/member-detail";
 import type { MemberMembershipDetail } from "@/lib/types/member-detail";
+import type { MembershipPlan } from "@/lib/types/memberships";
 
 interface MemberDetailMembershipTabProps {
   userId: string;
@@ -16,8 +22,13 @@ export function MemberDetailMembershipTab({
   const [membership, setMembership] = useState<MemberMembershipDetail | null>(
     null,
   );
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [changingPlan, setChangingPlan] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [planMessage, setPlanMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,8 +37,15 @@ export function MemberDetailMembershipTab({
       setIsLoading(true);
       setError(null);
       try {
-        const data = await fetchMemberMembership(userId);
-        if (!cancelled) setMembership(data);
+        const [data, loadedPlans] = await Promise.all([
+          fetchMemberMembership(userId),
+          listMembershipPlans().catch(() => [] as MembershipPlan[]),
+        ]);
+        if (!cancelled) {
+          setMembership(data);
+          setPlans(loadedPlans.filter((plan) => plan.status === "active"));
+          setSelectedPlanId(data.planId ?? "");
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -44,6 +62,36 @@ export function MemberDetailMembershipTab({
       cancelled = true;
     };
   }, [userId]);
+
+  async function handleSavePlan() {
+    if (!selectedPlanId) return;
+    setIsSavingPlan(true);
+    setError(null);
+    setPlanMessage(null);
+    try {
+      const updated = await updateMemberSubscriptionPlan(userId, selectedPlanId);
+      const plan = plans.find((entry) => entry.id === updated.planId);
+      setMembership((current) =>
+        current
+          ? {
+              ...current,
+              planId: updated.planId,
+              planName: updated.planName ?? plan?.name ?? current.planName,
+            }
+          : current,
+      );
+      setChangingPlan(false);
+      setPlanMessage("Membership plan updated.");
+    } catch (err) {
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : "Unable to change membership plan.",
+      );
+    } finally {
+      setIsSavingPlan(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -96,20 +144,50 @@ export function MemberDetailMembershipTab({
             </ul>
           ) : null}
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              Change Plan
-              <ChevronDown className="size-3.5" />
-            </button>
-            <button
-              type="button"
-              className="text-sm font-semibold text-red-600 hover:text-red-700"
-            >
-              Cancel Membership
-            </button>
+            {changingPlan ? (
+              <>
+                <select
+                  value={selectedPlanId}
+                  onChange={(event) => setSelectedPlanId(event.target.value)}
+                  className="h-10 rounded-lg border border-neutral-200 bg-white px-3 text-sm text-slate-800 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  aria-label="Select membership plan"
+                >
+                  <option value="">Select a plan</option>
+                  {plans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => void handleSavePlan()}
+                  disabled={!selectedPlanId || isSavingPlan}
+                  className="inline-flex items-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
+                >
+                  {isSavingPlan ? "Saving…" : "Save plan"}
+                </button>
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-slate-600 hover:text-slate-800"
+                  onClick={() => setChangingPlan(false)}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => setChangingPlan(true)}
+              >
+                Change Plan
+              </button>
+            )}
           </div>
+          {planMessage ? (
+            <p className="mt-3 text-sm text-emerald-700">{planMessage}</p>
+          ) : null}
         </div>
 
         {showCredits ? (
@@ -170,12 +248,6 @@ export function MemberDetailMembershipTab({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="text-sm font-semibold text-primary-600 hover:text-primary-700"
-              >
-                Update
-              </button>
             </div>
           ) : (
             <p className="mt-4 text-sm text-slate-500">

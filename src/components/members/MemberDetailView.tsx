@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Loader2, Mail, MoreHorizontal, Pencil, Phone } from "lucide-react";
+import { Check, Loader2, Mail, MoreHorizontal, Pencil, Phone, UserX } from "lucide-react";
 import { MemberDetailAttendanceTab } from "@/components/members/detail/MemberDetailAttendanceTab";
 import { MemberDetailBookingsTab } from "@/components/members/detail/MemberDetailBookingsTab";
 import { MemberDetailMembershipTab } from "@/components/members/detail/MemberDetailMembershipTab";
@@ -17,6 +17,9 @@ import {
   checkInMember,
   fetchMemberOverview,
 } from "@/lib/api/member-detail";
+import { updateMemberStatus } from "@/lib/api/members";
+import { ApiClientError } from "@/lib/api/client";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type {
   MemberDetailData,
   MemberDetailTab,
@@ -49,7 +52,13 @@ export function MemberDetailView({
     null,
   );
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
   const [checkInLoading, setCheckInLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [disableOpen, setDisableOpen] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const [attendanceRefreshKey, setAttendanceRefreshKey] = useState(0);
 
   const name = member.displayName ?? member.email;
@@ -65,12 +74,19 @@ export function MemberDetailView({
 
     async function loadOverview() {
       setOverviewLoading(true);
+      setOverviewError(null);
       try {
         const data = await fetchMemberOverview(
           userId,
           member.membershipPlanName,
         );
         if (!cancelled) setOverview(data);
+      } catch (err) {
+        if (!cancelled) {
+          setOverviewError(
+            err instanceof Error ? err.message : "Unable to load overview.",
+          );
+        }
       } finally {
         if (!cancelled) setOverviewLoading(false);
       }
@@ -84,15 +100,24 @@ export function MemberDetailView({
 
   const handleCheckIn = useCallback(async () => {
     setCheckInLoading(true);
+    setActionError(null);
+    setActionMessage(null);
     try {
       await checkInMember(userId);
       setAttendanceRefreshKey((value) => value + 1);
       const data = await fetchMemberOverview(userId, member.membershipPlanName);
       setOverview(data);
+      setActionMessage(`${name} is checked in.`);
+    } catch (err) {
+      setActionError(
+        err instanceof ApiClientError
+          ? err.message
+          : "Unable to check this member in.",
+      );
     } finally {
       setCheckInLoading(false);
     }
-  }, [userId, member.membershipPlanName]);
+  }, [userId, member.membershipPlanName, name]);
 
   const detail: MemberDetailData = {
     memberSince,
@@ -131,8 +156,39 @@ export function MemberDetailView({
     notes: [],
   };
 
+  async function handleDisable() {
+    setStatusUpdating(true);
+    setActionError(null);
+    try {
+      await updateMemberStatus(member.id, "disabled");
+      setDisableOpen(false);
+      setMoreOpen(false);
+      setActionMessage(`${name} has been disabled.`);
+    } catch (err) {
+      setActionError(
+        err instanceof ApiClientError
+          ? err.message
+          : "Unable to disable this member.",
+      );
+    } finally {
+      setStatusUpdating(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      <ConfirmDialog
+        open={disableOpen}
+        title="Disable member?"
+        description={`${name} will lose access to the member portal and will not be able to book classes or check in.`}
+        confirmLabel="Disable member"
+        confirmVariant="destructive"
+        isLoading={statusUpdating}
+        onConfirm={() => void handleDisable()}
+        onCancel={() => {
+          if (!statusUpdating) setDisableOpen(false);
+        }}
+      />
       <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-5">
           {member.avatarUrl ? (
@@ -183,20 +239,60 @@ export function MemberDetailView({
           </button>
           <Link
             href={`/members/${member.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             <Pencil className="size-4" />
             Edit Profile
           </Link>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-3 py-2.5 text-slate-600 hover:bg-slate-50"
-            aria-label="More actions"
-          >
-            <MoreHorizontal className="size-[18px]" />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-3 py-2.5 text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              aria-label="More actions"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((open) => !open)}
+            >
+              <MoreHorizontal className="size-[18px]" />
+            </button>
+            {moreOpen ? (
+              <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-neutral-200 bg-white py-1 shadow-lg">
+                <Link
+                  href={`/members/${member.id}/edit`}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-neutral-50"
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <Pencil className="size-4" />
+                  Edit profile
+                </Link>
+                {member.status !== "disabled" ? (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-danger-700 hover:bg-danger-50"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setDisableOpen(true);
+                    }}
+                  >
+                    <UserX className="size-4" />
+                    Disable member
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
+
+      {actionError ? (
+        <p className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700" role="alert">
+          {actionError}
+        </p>
+      ) : null}
+      {actionMessage ? (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
+          {actionMessage}
+        </p>
+      ) : null}
 
       <div className="flex gap-6 overflow-x-auto border-b border-neutral-200">
         {TABS.map((tab) => {
@@ -228,6 +324,10 @@ export function MemberDetailView({
             <Loader2 className="size-4 animate-spin" />
             Loading overview…
           </div>
+        ) : overviewError ? (
+          <p className="py-16 text-center text-sm text-danger-700" role="alert">
+            {overviewError}
+          </p>
         ) : (
           <MemberDetailOverviewTab member={member} detail={detail} />
         )

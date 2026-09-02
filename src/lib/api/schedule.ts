@@ -143,6 +143,7 @@ export async function promoteWaitlistMember(
   userId: string,
 ): Promise<void> {
   if (demoMembershipsEnabled()) {
+    demoSchedule.promoteWaitlist(sessionId, userId);
     return;
   }
   await apiRequest<void>(
@@ -156,6 +157,7 @@ export async function removeWaitlistMember(
   userId: string,
 ): Promise<void> {
   if (demoMembershipsEnabled()) {
+    demoSchedule.removeWaitlist(sessionId, userId);
     return;
   }
   await apiRequest<void>(`/api/v1/class-sessions/${sessionId}/waitlist/${userId}`, {

@@ -1,8 +1,9 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import { useFocusTrap } from "@/lib/ui/focus-trap";
 
 interface SidePanelProps {
   open: boolean;
@@ -23,6 +24,9 @@ export function SidePanel({
   footer,
   highlighted = false,
 }: SidePanelProps) {
+  const panelRef = useRef<HTMLElement>(null);
+  useFocusTrap(open, panelRef);
+
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -47,6 +51,7 @@ export function SidePanel({
         aria-label="Close panel"
       />
       <aside
+        ref={panelRef}
         className={`relative flex h-full w-full max-w-md flex-col bg-white shadow-xl ${
           highlighted ? "border-2 border-primary-600 shadow-primary-600/10" : ""
         }`}

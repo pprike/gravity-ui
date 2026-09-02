@@ -1,6 +1,7 @@
 import type { AuthSession } from "@/lib/types/auth";
 
 const SESSION_KEY = "gravity_auth_session";
+const ACCESS_TOKEN_SKEW_MS = 15_000;
 
 const listeners = new Set<() => void>();
 let cachedSnapshot: AuthSession | null | undefined;
@@ -33,14 +34,14 @@ export function getStoredSession(): AuthSession | null {
 
 export function readAuthSession(): AuthSession | null {
   if (cachedSnapshot !== undefined) {
-    if (cachedSnapshot && isSessionExpired(cachedSnapshot)) {
+    if (cachedSnapshot && isRefreshTokenGone(cachedSnapshot)) {
       cachedSnapshot = null;
     }
     return cachedSnapshot;
   }
 
   const stored = getStoredSession();
-  if (!stored || isSessionExpired(stored)) {
+  if (!stored || isRefreshTokenGone(stored)) {
     cachedSnapshot = null;
     return null;
   }
@@ -59,6 +60,18 @@ export function clearSession(): void {
   notifyAuthSessionChange();
 }
 
+function isRefreshTokenGone(session: AuthSession): boolean {
+  if (!session.refreshToken) {
+    return isAccessTokenExpired(session);
+  }
+  return false;
+}
+
+export function isAccessTokenExpired(session: AuthSession): boolean {
+  return Date.now() >= session.expiresAt - ACCESS_TOKEN_SKEW_MS;
+}
+
+/** @deprecated Prefer isAccessTokenExpired; kept for callers that meant access TTL. */
 export function isSessionExpired(session: AuthSession): boolean {
-  return Date.now() >= session.expiresAt;
+  return isAccessTokenExpired(session);
 }

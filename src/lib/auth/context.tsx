@@ -17,6 +17,7 @@ import {
   readAuthSession,
   subscribeAuthSession,
 } from "@/lib/auth/storage";
+import { demoLoginEnabled } from "@/lib/auth/demo";
 import { getDashboardPath } from "@/lib/navigation/config";
 import type {
   ActivateInviteRequest,
@@ -75,6 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loginAsDemo = useCallback((role: UserRole) => {
+    if (!demoLoginEnabled()) {
+      throw new Error("Demo login is disabled.");
+    }
     const nextSession = createDemoSession(role);
     return getDashboardPath(nextSession.user.roles);
   }, []);

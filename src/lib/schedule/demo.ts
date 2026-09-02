@@ -394,4 +394,56 @@ export const demoSchedule = {
     writeStore(store);
     return updated;
   },
+  promoteWaitlist(sessionId: string, userId: string): void {
+    const store = readStore();
+    const roster = [...this.listRoster(sessionId)];
+    const entry = roster.find((item) => item.userId === userId);
+    if (!entry || entry.bookingStatus !== "waitlisted") return;
+    entry.bookingStatus = "confirmed";
+    store.rosters[sessionId] = roster;
+
+    const existing = allSessions(store).find((session) => session.id === sessionId);
+    if (existing) {
+      const waitlistCount = roster.filter(
+        (item) => item.bookingStatus === "waitlisted",
+      ).length;
+      const updated: ClassSession = {
+        ...existing,
+        bookedCount: existing.bookedCount + 1,
+        waitlistCount,
+      };
+      const createdIndex = store.createdSessions.findIndex(
+        (session) => session.id === sessionId,
+      );
+      if (createdIndex >= 0) {
+        store.createdSessions[createdIndex] = updated;
+      } else {
+        store.createdSessions.push(updated);
+      }
+    }
+    writeStore(store);
+  },
+  removeWaitlist(sessionId: string, userId: string): void {
+    const store = readStore();
+    const roster = this.listRoster(sessionId).filter(
+      (item) => item.userId !== userId,
+    );
+    store.rosters[sessionId] = roster;
+    const existing = allSessions(store).find((session) => session.id === sessionId);
+    if (existing) {
+      const waitlistCount = roster.filter(
+        (item) => item.bookingStatus === "waitlisted",
+      ).length;
+      const updated: ClassSession = { ...existing, waitlistCount };
+      const createdIndex = store.createdSessions.findIndex(
+        (session) => session.id === sessionId,
+      );
+      if (createdIndex >= 0) {
+        store.createdSessions[createdIndex] = updated;
+      } else {
+        store.createdSessions.push(updated);
+      }
+    }
+    writeStore(store);
+  },
 };

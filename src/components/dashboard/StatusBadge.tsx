@@ -10,7 +10,7 @@ export function StatusBadge({
   return (
     <span
       className={clsx(
-        "inline-flex rounded px-2 py-0.5 text-[10px] font-bold tracking-wide",
+        "inline-flex whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold tracking-wide",
         tone === "success" && "bg-emerald-50 text-emerald-700",
         tone === "warning" && "bg-amber-50 text-amber-700",
         tone === "danger" && "bg-red-50 text-red-700",

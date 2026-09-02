@@ -19,6 +19,7 @@ export function MemberDetailNotesTab({
   const [draft, setDraft] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +32,8 @@ export function MemberDetailNotesTab({
           setNotes(data);
           onNotesCountChange?.(data.length);
         }
+      } catch {
+        if (!cancelled) setError("Unable to load notes.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -47,6 +50,7 @@ export function MemberDetailNotesTab({
     if (!trimmed || isSaving) return;
 
     setIsSaving(true);
+    setError(null);
     try {
       const note = await createMemberNote(userId, trimmed);
       setNotes((current) => {
@@ -55,6 +59,8 @@ export function MemberDetailNotesTab({
         return next;
       });
       setDraft("");
+    } catch {
+      setError("Unable to add this note.");
     } finally {
       setIsSaving(false);
     }
@@ -81,6 +87,11 @@ export function MemberDetailNotesTab({
           className="mt-4 w-full resize-none rounded-lg border border-neutral-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
         />
         <div className="mt-4">
+          {error ? (
+            <p className="mb-3 text-sm text-danger-700" role="alert">
+              {error}
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={() => void handleAddNote()}

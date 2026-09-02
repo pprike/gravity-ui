@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MoreHorizontal, Plus, X } from "lucide-react";
+import { Copy, Plus, X } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import { listLocations } from "@/lib/api/locations";
 import {
@@ -10,7 +10,6 @@ import {
   listRoles,
   listStaff,
 } from "@/lib/api/staff";
-import { demoSettings, isDemoSession } from "@/lib/settings/demo";
 import { getRoleNavigationHint } from "@/lib/settings/role-permissions";
 import type { Location, Role, StaffMember } from "@/lib/types/settings";
 import { Badge } from "@/components/ui/Badge";
@@ -129,47 +128,29 @@ export function StaffRolesSettings() {
     }
 
     try {
-      if (isDemoSession()) {
-        const nameParts = inviteForm.fullName.trim().split(/\s+/);
-        const firstName = nameParts[0] ?? "";
-        const lastName = nameParts.slice(1).join(" ");
-        const member: StaffMember = {
-          id: `staff-${Date.now()}`,
-          firstName,
-          lastName,
-          email: inviteForm.email.trim(),
-          roleId: role.id,
-          roleName: role.name,
-          locationIds: inviteForm.locationIds,
-          status: "invited",
-        };
-        demoSettings.saveStaff(member);
-        setStaff((prev) => [...prev, member]);
-      } else {
-        const nameParts = inviteForm.fullName.trim().split(/\s+/);
-        const firstName = nameParts[0] ?? "";
-        const lastName = nameParts.slice(1).join(" ") || firstName;
-        const invited = await inviteStaff({
-          firstName,
-          lastName,
-          email: inviteForm.email.trim(),
-          roleId: role.id,
-          locationIds: inviteForm.locationIds,
-        });
-        setStaff((prev) => [
-          ...prev,
-          {
-            id: invited.id,
-            firstName: invited.firstName,
-            lastName: invited.lastName,
-            email: invited.email,
-            roleId: invited.roleId,
-            roleName: invited.roleName,
-            locationIds: invited.locationIds,
-            status: invited.status,
-          },
-        ]);
-      }
+      const nameParts = inviteForm.fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] ?? "";
+      const lastName = nameParts.slice(1).join(" ") || firstName;
+      const invited = await inviteStaff({
+        firstName,
+        lastName,
+        email: inviteForm.email.trim(),
+        roleId: role.id,
+        locationIds: inviteForm.locationIds,
+      });
+      setStaff((prev) => [
+        ...prev,
+        {
+          id: invited.id,
+          firstName: invited.firstName,
+          lastName: invited.lastName,
+          email: invited.email,
+          roleId: invited.roleId,
+          roleName: invited.roleName,
+          locationIds: invited.locationIds,
+          status: invited.status,
+        },
+      ]);
       setPanelOpen(false);
       setInviteForm({ ...EMPTY_INVITE, roleId: roles[0]?.id ?? "" });
     } catch (err) {
@@ -268,10 +249,13 @@ export function StaffRolesSettings() {
                   <td className="px-4 py-3">
                     <button
                       type="button"
-                      className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
-                      aria-label={`More actions for ${member.firstName}`}
+                      className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      aria-label={`Copy email for ${member.firstName}`}
+                      onClick={() => {
+                        void navigator.clipboard.writeText(member.email);
+                      }}
                     >
-                      <MoreHorizontal className="h-4 w-4" />
+                      <Copy className="h-4 w-4" />
                     </button>
                   </td>
                 </tr>

@@ -28,8 +28,8 @@ const PREFERENCE_ITEMS: Array<{
   },
   {
     key: "marketing",
-    title: "Billing alerts",
-    description: "Payment receipts, failed charges, and renewal notices.",
+    title: "Promotional emails",
+    description: "Optional studio offers, events, and news.",
   },
 ];
 

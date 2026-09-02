@@ -118,9 +118,6 @@ export function getPrimaryRole(roles: UserRole[]): UserRole {
   return priority.find((role) => roles.includes(role)) ?? roles[0] ?? "MEMBER";
 }
 
-export function getDashboardPath(roles: UserRole[]): string {
-  const primary = getPrimaryRole(roles);
-  if (primary === "RECEPTIONIST") return "/dashboard";
-  if (primary === "COACH") return "/dashboard";
+export function getDashboardPath(_roles: UserRole[]): string {
   return "/dashboard";
 }

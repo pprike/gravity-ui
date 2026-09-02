@@ -31,4 +31,24 @@ test.describe("Admin portal navigation", () => {
     await sidebarLink(page, "Settings").click();
     await expect(page).toHaveURL(/\/settings/);
   });
+
+  test("dashboard loads live metrics and header search reaches members", async ({
+    page,
+  }) => {
+    await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByText("Active Members")).toBeVisible();
+    await expect(page.getByText("Check-ins Today")).toBeVisible();
+
+    await page.getByRole("searchbox", { name: "Search portal" }).fill("jessica");
+    await page.getByRole("searchbox", { name: "Search portal" }).press("Enter");
+    await expect(page).toHaveURL(/\/members\?q=jessica/);
+    await expect(
+      page.getByRole("searchbox", { name: "Search members" }),
+    ).toHaveValue("jessica");
+  });
+
+  test("unknown portal route shows not found", async ({ page }) => {
+    await page.goto("/this-route-does-not-exist");
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  });
 });

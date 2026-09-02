@@ -191,18 +191,18 @@ export const demoMemberships = {
   getProfile(userId: string): UserProfile {
     const stored = readProfileStore()[userId];
     if (stored) return stored;
+    const nameFromId = userId
+      .replace(/^demo-member-/, "")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
     return {
       userId,
       roles: ["MEMBER"],
       member: {
-        displayName: "Jessica Chen",
-        phone: "(555) 382-9102",
+        displayName: nameFromId || "Member",
+        phone: null,
         avatarUrl: null,
-        emergencyContact: {
-          name: "Robert Chen",
-          phone: "(555) 912-3049",
-          relationship: "Brother",
-        },
+        emergencyContact: null,
       },
       coach: null,
       admin: null,
@@ -256,8 +256,8 @@ export const demoMemberships = {
       {
         subscriptionId: "sub-4",
         userId: "demo-member-3",
-        memberName: "Michael O'Brien",
-        memberEmail: "m.obrien@email.com",
+        memberName: "James Carter",
+        memberEmail: "james.carter@work.com",
         planId: "plan-1",
         planName: "Premium Monthly",
         status: "cancelled",
