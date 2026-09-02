@@ -194,7 +194,13 @@ export async function qrCheckIn(payload: QrCheckInPayload): Promise<FrontDeskChe
     }
     const { searchMembers } = await import("@/lib/api/members");
     const members = await searchMembers();
-    const member = members[0];
+    const hash = Array.from(token).reduce(
+      (sum, char) => sum + char.charCodeAt(0),
+      0,
+    );
+    const member =
+      members.find((entry) => token.includes(entry.id)) ??
+      members[hash % Math.max(members.length, 1)];
     if (!member) {
       throw new ApiClientError("Member not found.", "NOT_FOUND", 404);
     }

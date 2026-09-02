@@ -3,17 +3,20 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { Dumbbell, LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Dumbbell, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth/context";
 import { getNavItemsForRoles, getPrimaryRole } from "@/lib/navigation/config";
 import { useOrganizationBrand } from "@/lib/shell/use-organization-brand";
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  onMobileOpenChange: (open: boolean) => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const brand = useOrganizationBrand();
 
   if (!user) return null;
@@ -33,7 +36,7 @@ export function Sidebar() {
           <p className="truncate text-base font-extrabold text-white">
             {brand.shortName}
           </p>
-          <p className="text-[11px] font-semibold tracking-wide text-primary-600">
+          <p className="text-[11px] font-semibold tracking-wide text-primary-300">
             FITNESS
           </p>
         </div>
@@ -52,12 +55,12 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={() => onMobileOpenChange(false)}
               className={clsx(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                 isActive
-                  ? "bg-primary-600/10 font-semibold text-primary-600"
-                  : "font-medium text-slate-400 hover:text-slate-200",
+                  ? "bg-primary-600/10 font-semibold text-primary-300"
+                  : "font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200",
               )}
               aria-current={isActive ? "page" : undefined}
             >
@@ -77,7 +80,7 @@ export function Sidebar() {
             <p className="truncate text-sm font-semibold text-white">
               {displayName}
             </p>
-            <span className="mt-0.5 inline-flex rounded bg-primary-600/15 px-1.5 py-0.5 text-[10px] font-bold text-primary-600">
+            <span className="mt-0.5 inline-flex rounded bg-primary-600/15 px-1.5 py-0.5 text-[10px] font-bold text-primary-300">
               {primaryRole}
             </span>
             <button
@@ -99,27 +102,18 @@ export function Sidebar() {
 
   return (
     <>
-      <button
-        type="button"
-        className="fixed left-4 top-4 z-40 rounded-lg border border-neutral-200 bg-white p-2 text-neutral-700 shadow-sm lg:hidden"
-        onClick={() => setMobileOpen((open) => !open)}
-        aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
-      >
-        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
-
       {mobileOpen && (
         <button
           type="button"
           className="fixed inset-0 z-30 bg-neutral-900/40 lg:hidden"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => onMobileOpenChange(false)}
           aria-label="Close navigation overlay"
         />
       )}
 
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-30 flex w-60 flex-col gap-4 border-r border-slate-900 bg-slate-800 px-4 py-6 transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col gap-4 border-r border-slate-900 bg-slate-800 px-4 py-6 transition-transform lg:static lg:z-auto lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

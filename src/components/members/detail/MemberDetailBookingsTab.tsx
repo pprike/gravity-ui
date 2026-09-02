@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, Loader2, Plus } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Plus } from "lucide-react";
 import { BookingStatusPill } from "@/components/members/detail/MemberDetailBadges";
 import { fetchMemberBookings } from "@/lib/api/member-detail";
 import type { MemberBookingRow } from "@/lib/types/member-detail";
@@ -16,17 +17,25 @@ export function MemberDetailBookingsTab({
   const [statusFilter, setStatusFilter] = useState("all");
   const [bookings, setBookings] = useState<MemberBookingRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setIsLoading(true);
+      setError(null);
       try {
         const rows = await fetchMemberBookings(userId, {
           status: statusFilter,
         });
         if (!cancelled) setBookings(rows);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load bookings",
+          );
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -41,36 +50,26 @@ export function MemberDetailBookingsTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-slate-600"
+        <label className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-slate-600">
+          Status:
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="bg-transparent font-semibold text-slate-900 focus:outline-none"
           >
-            <Calendar className="size-4 text-slate-400" />
-            Aug 1 – Aug 31
-            <ChevronDown className="size-3" />
-          </button>
-          <label className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-slate-600">
-            Status:
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="bg-transparent font-semibold text-slate-900 focus:outline-none"
-            >
-              <option value="all">All</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </label>
-        </div>
-        <button
-          type="button"
+            <option value="all">All</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+        <Link
+          href="/schedule"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
         >
           <Plus className="size-4" />
           Book New Class
-        </button>
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
@@ -85,6 +84,10 @@ export function MemberDetailBookingsTab({
             <Loader2 className="size-4 animate-spin" />
             Loading bookings…
           </div>
+        ) : error ? (
+          <p className="px-4 py-10 text-center text-sm text-danger-700" role="alert">
+            {error}
+          </p>
         ) : bookings.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-slate-500">
             No bookings match the selected filters.

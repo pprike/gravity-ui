@@ -237,6 +237,66 @@ function mapMembership(
   };
 }
 
+const DEMO_NOTES_KEY = "gravity-demo-member-notes";
+const DEMO_CHECKINS_KEY = "gravity-demo-member-checkins";
+
+interface DemoCheckIn {
+  id: string;
+  userId: string;
+  checkedInAt: string;
+  locationName: string;
+}
+
+function readDemoNotes(userId: string): MemberNote[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DEMO_NOTES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Record<string, MemberNote[]>;
+    return parsed[userId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function writeDemoNotes(userId: string, notes: MemberNote[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(DEMO_NOTES_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, MemberNote[]>) : {};
+    parsed[userId] = notes;
+    window.localStorage.setItem(DEMO_NOTES_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore storage failures in demo mode.
+  }
+}
+
+function readDemoCheckIns(userId: string): DemoCheckIn[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DEMO_CHECKINS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as DemoCheckIn[];
+    return parsed.filter((entry) => entry.userId === userId);
+  } catch {
+    return [];
+  }
+}
+
+function writeDemoCheckIn(entry: DemoCheckIn): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(DEMO_CHECKINS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as DemoCheckIn[]) : [];
+    window.localStorage.setItem(
+      DEMO_CHECKINS_KEY,
+      JSON.stringify([entry, ...parsed]),
+    );
+  } catch {
+    // Ignore storage failures in demo mode.
+  }
+}
+
 export async function fetchMemberSummary(
   userId: string,
 ): Promise<MemberSummaryContext> {
@@ -311,7 +371,38 @@ export async function fetchMemberAttendance(
   year: number,
 ): Promise<MemberAttendanceSummary> {
   if (demoMembershipsEnabled()) {
-    return getMemberDetailDemo(userId, null).attendance;
+    const demo = getMemberDetailDemo(userId, null).attendance;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const attendedDates: string[] = [];
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      if (day % 3 === 0 || day % 7 === 0) {
+        attendedDates.push(
+          `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+        );
+      }
+    }
+    const extra = readDemoCheckIns(userId).filter((checkIn) => {
+      const date = new Date(checkIn.checkedInAt);
+      return date.getMonth() + 1 === month && date.getFullYear() === year;
+    });
+    for (const checkIn of extra) {
+      const iso = new Date(checkIn.checkedInAt).toISOString().slice(0, 10);
+      if (!attendedDates.includes(iso)) attendedDates.push(iso);
+    }
+    const recentCheckIns = [
+      ...extra.map((checkIn) => ({
+        id: checkIn.id,
+        checkedInAt: formatDateTime(checkIn.checkedInAt),
+        locationName: checkIn.locationName,
+      })),
+      ...demo.recentCheckIns,
+    ].slice(0, 10);
+    return {
+      ...demo,
+      attendedDates,
+      visitsThisMonth: attendedDates.length,
+      recentCheckIns,
+    };
   }
 
   const [summary, attendedDates, recentCheckIns] = await Promise.all([
@@ -341,7 +432,17 @@ export async function fetchMemberAttendance(
 }
 
 export async function checkInMember(userId: string): Promise<void> {
-  if (demoMembershipsEnabled()) return;
+  if (demoMembershipsEnabled()) {
+    const { updateDemoMemberVisit } = await import("@/lib/api/members");
+    updateDemoMemberVisit(userId);
+    writeDemoCheckIn({
+      id: `checkin-${Date.now()}`,
+      userId,
+      checkedInAt: new Date().toISOString(),
+      locationName: "Main Studio",
+    });
+    return;
+  }
 
   await apiRequest<MemberCheckInApi>(`/api/v1/users/${userId}/check-ins`, {
     method: "POST",
@@ -430,7 +531,9 @@ export async function fetchMemberMembership(
 
 export async function fetchMemberNotes(userId: string): Promise<MemberNote[]> {
   if (demoMembershipsEnabled()) {
-    return getMemberDetailDemo(userId, null).notes;
+    const stored = readDemoNotes(userId);
+    const seed = getMemberDetailDemo(userId, null).notes;
+    return [...stored, ...seed];
   }
 
   const notes = await apiRequest<MemberNoteApi[]>(
@@ -444,7 +547,7 @@ export async function createMemberNote(
   body: string,
 ): Promise<MemberNote> {
   if (demoMembershipsEnabled()) {
-    return {
+    const note: MemberNote = {
       id: `note-${Date.now()}`,
       authorName: "You",
       authorRole: "Staff",
@@ -456,6 +559,9 @@ export async function createMemberNote(
       }),
       body,
     };
+    const next = [note, ...readDemoNotes(userId)];
+    writeDemoNotes(userId, next);
+    return note;
   }
 
   const note = await apiRequest<MemberNoteApi>(

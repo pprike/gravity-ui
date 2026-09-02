@@ -39,8 +39,10 @@ export function shouldPatchMemberStatus(
   );
 }
 
+const DEMO_MEMBERS_KEY = "gravity-demo-members";
+
 /** Demo roster aligned with Figma members-list (3:2789). */
-const DEMO_MEMBERS: MemberSearchResult[] = [
+const DEFAULT_DEMO_MEMBERS: MemberSearchResult[] = [
   {
     id: "demo-member-1",
     email: "alex@email.com",
@@ -125,6 +127,33 @@ const DEMO_MEMBERS: MemberSearchResult[] = [
   },
 ];
 
+function readDemoMembers(): MemberSearchResult[] {
+  if (typeof window === "undefined") {
+    return DEFAULT_DEMO_MEMBERS.map((member) => ({ ...member }));
+  }
+  try {
+    const raw = localStorage.getItem(DEMO_MEMBERS_KEY);
+    if (!raw) {
+      return DEFAULT_DEMO_MEMBERS.map((member) => ({ ...member }));
+    }
+    const parsed = JSON.parse(raw) as MemberSearchResult[];
+    return parsed.length > 0
+      ? parsed
+      : DEFAULT_DEMO_MEMBERS.map((member) => ({ ...member }));
+  } catch {
+    return DEFAULT_DEMO_MEMBERS.map((member) => ({ ...member }));
+  }
+}
+
+function writeDemoMembers(members: MemberSearchResult[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(DEMO_MEMBERS_KEY, JSON.stringify(members));
+}
+
+function getDemoMembers(): MemberSearchResult[] {
+  return readDemoMembers();
+}
+
 export function normalizeMember(raw: MemberSearchResult): MemberSearchResult {
   const record = raw as MemberSearchResult & {
     planName?: string | null;
@@ -142,16 +171,19 @@ export function normalizeMember(raw: MemberSearchResult): MemberSearchResult {
 }
 
 function filterDemoMembers(query?: string): MemberSearchResult[] {
+  const members = getDemoMembers();
   if (!query || query.trim().length < 2) {
-    return DEMO_MEMBERS.map(normalizeMember);
+    return members.map(normalizeMember);
   }
   const normalized = query.trim().toLowerCase();
-  return DEMO_MEMBERS.filter(
-    (member) =>
-      member.displayName?.toLowerCase().includes(normalized) ||
-      member.email.toLowerCase().includes(normalized) ||
-      member.phone?.toLowerCase().includes(normalized),
-  ).map(normalizeMember);
+  return members
+    .filter(
+      (member) =>
+        member.displayName?.toLowerCase().includes(normalized) ||
+        member.email.toLowerCase().includes(normalized) ||
+        member.phone?.toLowerCase().includes(normalized),
+    )
+    .map(normalizeMember);
 }
 
 export interface SearchMembersOptions {
@@ -215,7 +247,7 @@ export async function getMember(
   userId: string,
 ): Promise<MemberSearchResult | null> {
   if (demoMembershipsEnabled()) {
-    const member = DEMO_MEMBERS.find((entry) => entry.id === userId);
+    const member = getDemoMembers().find((entry) => entry.id === userId);
     return member ? normalizeMember(member) : null;
   }
 
@@ -236,8 +268,9 @@ export async function createMember(
   payload: CreateMemberPayload,
 ): Promise<CreateMemberResult> {
   if (demoMembershipsEnabled()) {
+    const members = getDemoMembers();
     const email = payload.email.trim().toLowerCase();
-    const duplicate = DEMO_MEMBERS.some(
+    const duplicate = members.some(
       (member) => member.email.toLowerCase() === email,
     );
     if (duplicate) {
@@ -247,8 +280,20 @@ export async function createMember(
         409,
       );
     }
-    return {
+    const created: MemberSearchResult = {
       id: `demo-member-${Date.now()}`,
+      email,
+      displayName: payload.displayName.trim(),
+      phone: payload.phone?.trim() ?? null,
+      avatarUrl: null,
+      status: "invited",
+      membershipPlanName: null,
+      membershipStatus: null,
+      lastVisitAt: null,
+    };
+    writeDemoMembers([created, ...members]);
+    return {
+      id: created.id,
       email,
       displayName: payload.displayName.trim(),
       phone: payload.phone?.trim() ?? null,
@@ -268,11 +313,22 @@ export async function createMember(
 }
 
 export function updateDemoMemberPlan(userId: string, planName: string): void {
-  const member = DEMO_MEMBERS.find((entry) => entry.id === userId);
+  const members = getDemoMembers();
+  const member = members.find((entry) => entry.id === userId);
   if (!member) {
     throw new ApiClientError("Member not found.", "NOT_FOUND", 404);
   }
   member.membershipPlanName = planName;
+  member.membershipStatus = "active";
+  writeDemoMembers(members);
+}
+
+export function updateDemoMemberVisit(userId: string): void {
+  const members = getDemoMembers();
+  const member = members.find((entry) => entry.id === userId);
+  if (!member) return;
+  member.lastVisitAt = new Date().toISOString();
+  writeDemoMembers(members);
 }
 
 export async function updateMemberStatus(
@@ -280,7 +336,8 @@ export async function updateMemberStatus(
   status: PatchableMemberAccountStatus,
 ): Promise<UpdateMemberStatusResult> {
   if (demoMembershipsEnabled()) {
-    const member = DEMO_MEMBERS.find((entry) => entry.id === userId);
+    const members = getDemoMembers();
+    const member = members.find((entry) => entry.id === userId);
     if (!member) {
       throw new ApiClientError("Member not found.", "NOT_FOUND", 404);
     }
@@ -292,6 +349,7 @@ export async function updateMemberStatus(
       );
     }
     member.status = status;
+    writeDemoMembers(members);
     return {
       id: member.id,
       email: member.email,

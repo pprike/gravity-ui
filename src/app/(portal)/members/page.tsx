@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUp,
   ChevronLeft,
@@ -51,7 +52,33 @@ function filterSelectClassName() {
 
 const PAGE_SIZE = 50;
 
+function isStatusFilter(value: string | null): value is StatusFilter {
+  return (
+    value === "all" ||
+    value === "active" ||
+    value === "disabled" ||
+    value === "invited"
+  );
+}
+
 export default function MembersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-primary-600" />
+        </div>
+      }
+    >
+      <MembersPageContent />
+    </Suspense>
+  );
+}
+
+function MembersPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [members, setMembers] = useState<MemberSearchResult[]>([]);
   const [totalMembers, setTotalMembers] = useState(0);
   const [page, setPage] = useState(0);
@@ -66,6 +93,13 @@ export default function MembersPage() {
     null,
   );
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = searchParams.get("q") ?? searchParams.get("search") ?? "";
+    const status = searchParams.get("status");
+    if (q) setSearchQuery(q);
+    if (isStatusFilter(status)) setStatusFilter(status);
+  }, [searchParams]);
 
   const loadMembers = useCallback(
     async (query: string, status: StatusFilter, plan: string, pageIndex: number) => {
@@ -135,6 +169,7 @@ export default function MembersPage() {
     setStatusFilter("all");
     setPlanFilter("all");
     setPage(0);
+    router.replace(pathname);
   }
 
   function requestStatusChange(

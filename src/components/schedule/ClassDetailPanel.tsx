@@ -22,6 +22,7 @@ import type { ClassSession } from "@/lib/types/schedule";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface ClassDetailPanelProps {
   session: ClassSession;
@@ -61,6 +62,7 @@ export function ClassDetailPanel({
   const [isMessaging, setIsMessaging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [error, setError] = useState("");
   const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([]);
   const [coaches, setCoaches] = useState<Array<{ id: string; name: string }>>([]);
@@ -160,15 +162,11 @@ export function ClassDetailPanel({
   }
 
   async function handleCancel() {
-    const confirmed = window.confirm(
-      `Cancel "${session.name}"? Confirmed members and the waitlist will be notified.`,
-    );
-    if (!confirmed) return;
-
     setIsCancelling(true);
     setError("");
     try {
       const updated = await cancelClassSession(session.id);
+      setConfirmCancelOpen(false);
       onSessionChanged?.(updated);
       onClose();
     } catch (err) {
@@ -184,6 +182,18 @@ export function ClassDetailPanel({
 
   return (
     <aside className="flex h-full flex-col bg-white">
+      <ConfirmDialog
+        open={confirmCancelOpen}
+        title="Cancel this class?"
+        description={`Cancel “${session.name}”? Confirmed members and the waitlist will be notified.`}
+        confirmLabel="Cancel class"
+        confirmVariant="destructive"
+        isLoading={isCancelling}
+        onConfirm={() => void handleCancel()}
+        onCancel={() => {
+          if (!isCancelling) setConfirmCancelOpen(false);
+        }}
+      />
       <div className="flex items-start justify-between gap-3 px-5 py-5">
         <div>
           <span
@@ -386,7 +396,7 @@ export function ClassDetailPanel({
               className="text-rose-700"
               disabled={isEditing || isCancelling}
               isLoading={isCancelling}
-              onClick={() => void handleCancel()}
+              onClick={() => setConfirmCancelOpen(true)}
             >
               <Trash2 className="size-4" />
               Cancel

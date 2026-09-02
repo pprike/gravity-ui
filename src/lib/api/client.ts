@@ -1,6 +1,7 @@
 import {
   clearSession,
   getStoredSession,
+  isAccessTokenExpired,
   storeSession,
 } from "@/lib/auth/storage";
 import { redirectToLogin } from "@/lib/api/session-redirect";
@@ -75,49 +76,75 @@ async function parseApiResponse<T>(
   }
 }
 
-async function refreshAccessToken(): Promise<AuthSession | null> {
-  const session = getStoredSession();
-  if (!session?.refreshToken) return null;
+let refreshInFlight: Promise<AuthSession | null> | null = null;
 
-  const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: session.refreshToken }),
+async function refreshAccessToken(): Promise<AuthSession | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const session = getStoredSession();
+    if (!session?.refreshToken) return null;
+    if (session.accessToken === "demo-access-token") {
+      const nextSession: AuthSession = {
+        ...session,
+        expiresAt: Date.now() + session.expiresIn * 1000,
+      };
+      storeSession(nextSession);
+      return nextSession;
+    }
+
+    const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+
+    if (!response.ok) {
+      clearSession();
+      return null;
+    }
+
+    let payload;
+    try {
+      payload = await parseApiResponse<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+        user: AuthSession["user"];
+      }>(response);
+    } catch {
+      clearSession();
+      return null;
+    }
+
+    if (!payload.data) {
+      clearSession();
+      return null;
+    }
+
+    const nextSession: AuthSession = {
+      accessToken: payload.data.accessToken,
+      refreshToken: payload.data.refreshToken,
+      expiresIn: payload.data.expiresIn,
+      user: payload.data.user,
+      expiresAt: Date.now() + payload.data.expiresIn * 1000,
+    };
+
+    storeSession(nextSession);
+    return nextSession;
+  })().finally(() => {
+    refreshInFlight = null;
   });
 
-  if (!response.ok) {
-    clearSession();
-    return null;
-  }
+  return refreshInFlight;
+}
 
-  let payload;
-  try {
-    payload = await parseApiResponse<{
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-      user: AuthSession["user"];
-    }>(response);
-  } catch {
-    clearSession();
-    return null;
-  }
-
-  if (!payload.data) {
-    clearSession();
-    return null;
-  }
-
-  const nextSession: AuthSession = {
-    accessToken: payload.data.accessToken,
-    refreshToken: payload.data.refreshToken,
-    expiresIn: payload.data.expiresIn,
-    user: payload.data.user,
-    expiresAt: Date.now() + payload.data.expiresIn * 1000,
-  };
-
-  storeSession(nextSession);
-  return nextSession;
+async function sessionForRequest(): Promise<AuthSession | null> {
+  const session = getStoredSession();
+  if (!session) return null;
+  if (!isAccessTokenExpired(session)) return session;
+  if (!session.refreshToken) return session;
+  return (await refreshAccessToken()) ?? session;
 }
 
 function throwSessionExpired(): never {
@@ -134,7 +161,7 @@ export async function apiRequest<T>(
   options: RequestInit = {},
   retry = true,
 ): Promise<T> {
-  const session = getStoredSession();
+  const session = await sessionForRequest();
   const headers = new Headers(options.headers);
 
   if (!headers.has("Content-Type") && options.body) {
@@ -180,7 +207,7 @@ export async function apiUpload<T>(
   file: File,
   retry = true,
 ): Promise<T> {
-  const session = getStoredSession();
+  const session = await sessionForRequest();
   const headers = new Headers();
 
   if (session?.accessToken) {

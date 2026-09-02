@@ -180,12 +180,19 @@ export function CreateClassForm() {
 
     setIsSaving(true);
     setError("");
+    const description = (() => {
+      const body = form.description.trim();
+      if (form.classType && form.classType !== "Other") {
+        return body ? `${form.classType}: ${body}` : `${form.classType} class`;
+      }
+      return body || undefined;
+    })();
     try {
       if (form.recurring) {
         for (const dayOfWeek of form.days) {
           await createClassTemplate({
             name: form.name.trim(),
-            description: form.description.trim() || undefined,
+            description,
             locationId: form.locationId,
             coachUserId: form.coachUserId,
             dayOfWeek,
@@ -199,7 +206,7 @@ export function CreateClassForm() {
       } else {
         await createClassSession({
           name: form.name.trim(),
-          description: form.description.trim() || undefined,
+          description,
           locationId: form.locationId,
           coachUserId: form.coachUserId,
           startsAt: toStartsAtIso(form.startDate, form.startTime),

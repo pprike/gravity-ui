@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { ApiClientError, apiRequest } from "@/lib/api/client";
 import { demoMemberships, demoMembershipsEnabled } from "@/lib/memberships/demo";
 import type {
   CreateMembershipPlanPayload,
@@ -14,7 +14,7 @@ export async function listMembershipPlans(): Promise<MembershipPlan[]> {
 export async function getMembershipPlan(id: string): Promise<MembershipPlan> {
   if (demoMembershipsEnabled()) {
     const plan = demoMemberships.getPlan(id);
-    if (!plan) throw new Error("Plan not found");
+    if (!plan) throw new ApiClientError("Plan not found", "NOT_FOUND", 404);
     return plan;
   }
   return apiRequest<MembershipPlan>(`/api/v1/membership-plans/${id}`);
@@ -52,7 +52,7 @@ export async function updateMembershipPlan(
 ): Promise<MembershipPlan> {
   if (demoMembershipsEnabled()) {
     const existing = demoMemberships.getPlan(id);
-    if (!existing) throw new Error("Plan not found");
+    if (!existing) throw new ApiClientError("Plan not found", "NOT_FOUND", 404);
     return demoMemberships.savePlan({ ...existing, ...payload });
   }
   return apiRequest<MembershipPlan>(`/api/v1/membership-plans/${id}`, {
