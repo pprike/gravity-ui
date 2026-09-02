@@ -29,7 +29,7 @@ import type {
 } from "@/lib/types/member";
 
 const TABLE_HEAD_CELL =
-  "px-5 py-3.5 align-middle text-xs font-semibold uppercase tracking-wide text-slate-500";
+  "whitespace-nowrap px-5 py-3.5 align-middle text-xs font-semibold uppercase tracking-wide text-slate-500";
 const TABLE_BODY_CELL = "px-5 py-3.5 align-middle text-sm";
 
 type StatusFilter = "all" | "active" | "disabled" | "invited";
