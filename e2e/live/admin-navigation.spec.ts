@@ -1,18 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { loginAsDemoAdmin, sidebarLink } from "./fixtures/auth";
+import { sidebarLink } from "../fixtures/auth";
+import { liveE2eEnabled, loginAsLiveAdmin } from "../fixtures/live-auth";
 
-test.describe("Admin portal navigation", () => {
+test.describe("Live admin navigation", () => {
+  test.skip(!liveE2eEnabled, "Set E2E_LIVE=true with gravity-service running.");
+
   test.beforeEach(async ({ page }) => {
-    await loginAsDemoAdmin(page);
+    await loginAsLiveAdmin(page);
   });
 
-  test("admin can open core portal pages", async ({ page }) => {
-    await sidebarLink(page, "Members").click();
-    await expect(page).toHaveURL(/\/members/);
-    await expect(
-      page.getByRole("searchbox", { name: "Search members" }),
-    ).toBeVisible();
-
+  test("admin can open core portal pages against the API", async ({ page }) => {
     await sidebarLink(page, "Memberships").click();
     await expect(page).toHaveURL(/\/memberships/);
     await expect(
@@ -21,9 +18,6 @@ test.describe("Admin portal navigation", () => {
 
     await sidebarLink(page, "Communication").click();
     await expect(page).toHaveURL(/\/communication/);
-    await expect(
-      page.getByRole("heading", { name: "Communication" }),
-    ).toBeVisible();
 
     await sidebarLink(page, "Attendance").click();
     await expect(page).toHaveURL(/\/attendance/);

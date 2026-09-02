@@ -30,7 +30,7 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:8080
         run: npm run build
 
-  e2e:
+  e2e-demo:
     runs-on: ubuntu-latest
 
     steps:
@@ -48,8 +48,99 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
+      - name: Run demo Playwright tests
         env:
           CI: true
           NEXT_PUBLIC_API_URL: http://localhost:8080
-        run: npm run test:e2e
+          NEXT_PUBLIC_ENABLE_DEMO: "true"
+        run: npm run test:e2e:demo
+
+  e2e-live:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: gravity
+          POSTGRES_USER: gravity
+          POSTGRES_PASSWORD: gravity
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gravity -d gravity"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out gravity-service
+        uses: actions/checkout@v4
+        with:
+          repository: pprike/gravity-service
+          path: gravity-service
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build gravity-service
+        working-directory: gravity-service
+        run: mvn -B package -DskipTests
+
+      - name: Start gravity-service
+        working-directory: gravity-service
+        env:
+          SPRING_PROFILES_ACTIVE: local
+          JWT_SECRET: Z3Jhdml0eS1kZXYtanNlY3JldC1rZXktbWluMzJieXRlcy1sb25n
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          RATE_LIMIT_STORE: memory
+        run: |
+          java -jar target/gravity-service.jar > ../api.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/actuator/health/readiness > /dev/null; then
+              echo "API is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to start"
+          cat ../api.log
+          exit 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run live Playwright tests
+        env:
+          CI: true
+          E2E_LIVE: "true"
+          E2E_ADMIN_EMAIL: admin@tenant-a.com
+          E2E_ADMIN_PASSWORD: Password123!
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_ENABLE_DEMO: "false"
+        run: npm run test:e2e:live

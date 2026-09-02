@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAsDemoAdmin, sidebarLink } from "./fixtures/auth";
+import { loginAsDemoAdmin, sidebarLink } from "../fixtures/auth";
 
 test.describe("Demo login", () => {
   test("admin can sign in without API and reach dashboard", async ({ page }) => {

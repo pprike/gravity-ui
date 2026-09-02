@@ -18,10 +18,22 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      NEXT_PUBLIC_API_URL:
+        process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080",
+      NEXT_PUBLIC_ENABLE_DEMO:
+        process.env.NEXT_PUBLIC_ENABLE_DEMO ?? "true",
+    },
   },
   projects: [
     {
-      name: "chromium",
+      name: "demo",
+      testMatch: /demo\/.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "live",
+      testMatch: /live\/.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
   ],
