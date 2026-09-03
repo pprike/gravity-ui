@@ -116,7 +116,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-glow">
             <Dumbbell className="size-7" aria-hidden />
           </div>
-          <p className="font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+          <p className="text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
             Gravity
           </p>
           <h1 className="mt-3 text-xl font-semibold tracking-tight text-neutral-800">

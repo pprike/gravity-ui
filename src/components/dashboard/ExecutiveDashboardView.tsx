@@ -331,7 +331,7 @@ export function DashboardView({ firstName }: DashboardViewProps) {
         <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-slate-800">Monthly Revenue</p>
-            <p className="mt-1 text-3xl font-bold text-slate-900">
+            <p className="mt-1 font-metric text-3xl font-semibold text-slate-900">
               {formatCurrency(data.revenue.mtdCents, data.revenue.currency)}
             </p>
             <p className="mt-1 inline-flex items-center gap-1 text-sm text-emerald-600">
@@ -365,7 +365,7 @@ function DashboardHeader({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
           Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">

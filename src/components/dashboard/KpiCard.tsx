@@ -30,7 +30,7 @@ export function KpiCard({
     >
       <p className="text-sm font-medium text-neutral-500">{label}</p>
       <div className="mt-3 flex items-end justify-between gap-3">
-        <p className="font-display text-3xl font-semibold tracking-tight text-neutral-900">
+        <p className="font-metric text-3xl font-semibold text-neutral-900">
           {value}
         </p>
         <span

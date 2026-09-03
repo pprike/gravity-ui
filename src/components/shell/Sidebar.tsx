@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { Dumbbell, LogOut } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import { useAuth } from "@/lib/auth/context";
 import { getNavItemsForRoles, getPrimaryRole } from "@/lib/navigation/config";
 import { useOrganizationBrand } from "@/lib/shell/use-organization-brand";
@@ -15,8 +15,7 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const brand = useOrganizationBrand();
 
   if (!user) return null;
@@ -33,7 +32,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
           <Dumbbell className="size-5 text-white" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-display truncate text-lg font-semibold tracking-tight text-white">
+          <p className="truncate text-lg font-semibold tracking-tight text-white">
             {brand.shortName}
           </p>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-300/90">
@@ -67,7 +66,9 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
               <Icon
                 className={clsx(
                   "size-5 shrink-0 transition-colors",
-                  isActive ? "text-primary-300" : "text-slate-500 group-hover:text-slate-300",
+                  isActive
+                    ? "text-primary-300"
+                    : "text-slate-500 group-hover:text-slate-300",
                 )}
                 aria-hidden
               />
@@ -92,17 +93,6 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
             <span className="mt-0.5 inline-flex rounded-md bg-primary-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-300">
               {primaryRole}
             </span>
-            <button
-              type="button"
-              onClick={async () => {
-                await logout();
-                router.replace("/login");
-              }}
-              className="mt-2 inline-flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-white"
-            >
-              <LogOut className="size-3" />
-              Sign out
-            </button>
           </div>
         </div>
       </div>

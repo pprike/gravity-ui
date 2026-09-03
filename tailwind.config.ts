@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-outfit)", "system-ui", "sans-serif"],
-        display: ["var(--font-syne)", "var(--font-outfit)", "sans-serif"],
+        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
       },
       colors: {
         background: "var(--background)",

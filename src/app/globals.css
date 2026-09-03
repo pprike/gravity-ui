@@ -77,8 +77,8 @@
       radial-gradient(1200px 600px at 12% -10%, rgb(20 184 166 / 0.1), transparent 55%),
       radial-gradient(900px 500px at 92% 0%, rgb(15 118 110 / 0.07), transparent 50%),
       var(--background);
-    font-family: var(--font-outfit), system-ui, sans-serif;
-    font-feature-settings: "ss01" on, "cv11" on;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-feature-settings: "ss01" on, "tnum" on;
     text-rendering: optimizeLegibility;
   }
 
@@ -95,15 +95,21 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-syne), var(--font-outfit), sans-serif;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+  }
+
+  .font-metric {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
 
   .text-display {
-    @apply font-display text-3xl font-semibold tracking-tight;
+    @apply text-3xl font-semibold tracking-tight;
   }
 
   .text-h1 {
-    @apply font-display text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-semibold tracking-tight;
   }
 
   .text-h2 {

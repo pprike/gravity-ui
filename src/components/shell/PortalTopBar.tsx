@@ -169,7 +169,7 @@ export function PortalTopBar({
           )}
         </button>
         <div className="min-w-0">
-          <p className="font-display truncate text-lg font-semibold tracking-tight text-neutral-900">
+          <p className="truncate text-lg font-semibold tracking-tight text-neutral-900">
             {meta.title}
           </p>
           {meta.subtitle ? (
