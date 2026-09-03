@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import { clsx } from "clsx";
 import { ApiClientError } from "@/lib/api/client";
 import {
@@ -11,12 +11,14 @@ import {
   updateMembershipPlan,
 } from "@/lib/api/membership-plans";
 import { getOrganization } from "@/lib/api/organization";
+import { listLocations } from "@/lib/api/locations";
 import { inferPlanType } from "@/lib/memberships/format";
 import type {
   BillingInterval,
   MembershipPlan,
   PlanType,
 } from "@/lib/types/memberships";
+import type { Location } from "@/lib/types/settings";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -63,6 +65,7 @@ interface WizardForm {
   classCredits: string;
   unlimitedCredits: boolean;
   status: "active" | "inactive";
+  locationIds: string[];
 }
 
 const EMPTY_FORM: WizardForm = {
@@ -76,6 +79,7 @@ const EMPTY_FORM: WizardForm = {
   classCredits: "12",
   unlimitedCredits: true,
   status: "inactive",
+  locationIds: [],
 };
 
 interface PlanWizardProps {
@@ -95,6 +99,7 @@ function planToForm(plan: MembershipPlan): WizardForm {
     classCredits: plan.classCredits?.toString() ?? "12",
     unlimitedCredits: plan.classCredits == null,
     status: plan.status,
+    locationIds: plan.locationIds ?? [],
   };
 }
 
@@ -115,13 +120,20 @@ export function PlanWizard({ planId }: PlanWizardProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const org = await getOrganization().catch(() => null);
-        if (!cancelled && org) setSubtitle(org.name);
+        const [org, locationsData] = await Promise.all([
+          getOrganization().catch(() => null),
+          listLocations().catch(() => []),
+        ]);
+        if (!cancelled) {
+          if (org) setSubtitle(org.name);
+          setLocations(locationsData);
+        }
         if (planId) {
           const plan = await getMembershipPlan(planId);
           if (!cancelled) setForm(planToForm(plan));
@@ -136,6 +148,16 @@ export function PlanWizard({ planId }: PlanWizardProps) {
       cancelled = true;
     };
   }, [planId]);
+
+  function toggleLocation(locationId: string) {
+    setForm((prev) => ({
+      ...prev,
+      locationIds: prev.locationIds.includes(locationId)
+        ? prev.locationIds.filter((id) => id !== locationId)
+        : [...prev.locationIds, locationId],
+    }));
+    setError("");
+  }
 
   function updateField<K extends keyof WizardForm>(key: K, value: WizardForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -188,6 +210,7 @@ export function PlanWizard({ planId }: PlanWizardProps) {
       billingInterval: form.billingInterval,
       classCredits: resolveClassCredits(form),
       status: (asDraft ? "inactive" : form.status) as "active" | "inactive",
+      locationIds: form.locationIds,
     };
 
     setIsSaving(true);
@@ -455,6 +478,57 @@ export function PlanWizard({ planId }: PlanWizardProps) {
                 { value: "inactive", label: "Draft" },
               ]}
             />
+            <div>
+              <p className="mb-1 text-sm font-semibold text-slate-800">
+                Location Access
+              </p>
+              <p className="mb-2 text-xs text-slate-500">
+                Leave empty to allow members to use this plan at all locations.
+              </p>
+              <div className="flex min-h-[42px] flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-2">
+                {form.locationIds.length === 0 && (
+                  <span className="px-2 py-1 text-sm text-slate-400">
+                    All locations
+                  </span>
+                )}
+                {form.locationIds.map((locationId) => {
+                  const location = locations.find((item) => item.id === locationId);
+                  if (!location) return null;
+                  return (
+                    <span
+                      key={locationId}
+                      className="inline-flex items-center gap-1 rounded-md bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
+                    >
+                      {location.name}
+                      <button
+                        type="button"
+                        onClick={() => toggleLocation(locationId)}
+                        className="rounded hover:text-primary-900"
+                        aria-label={`Remove ${location.name}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+              {locations.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {locations
+                    .filter((location) => !form.locationIds.includes(location.id))
+                    .map((location) => (
+                      <button
+                        key={location.id}
+                        type="button"
+                        onClick={() => toggleLocation(location.id)}
+                        className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:border-slate-400"
+                      >
+                        + {location.name}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 

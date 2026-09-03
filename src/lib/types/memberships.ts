@@ -15,6 +15,8 @@ export interface MembershipPlan {
   stripeProductId: string | null;
   stripePriceId: string | null;
   activeMemberCount?: number;
+  /** Empty array means the plan is valid at all locations. */
+  locationIds: string[];
 }
 
 export interface CreateMembershipPlanPayload {
@@ -25,6 +27,7 @@ export interface CreateMembershipPlanPayload {
   billingInterval: BillingInterval;
   classCredits?: number | null;
   status?: PlanStatus;
+  locationIds?: string[];
 }
 
 export interface UpdateMembershipPlanPayload {
@@ -35,6 +38,7 @@ export interface UpdateMembershipPlanPayload {
   billingInterval: BillingInterval;
   classCredits?: number | null;
   status: PlanStatus;
+  locationIds: string[];
 }
 
 export interface BookingRules {

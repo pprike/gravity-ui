@@ -51,3 +51,14 @@ export function inferPlanType(plan: MembershipPlan): PlanType {
 export function planStatusLabel(status: MembershipPlan["status"]): string {
   return status === "active" ? "Active" : "Draft";
 }
+
+export function formatPlanLocations(
+  locationIds: string[],
+  locations: Array<{ id: string; name: string }>,
+): string {
+  if (locationIds.length === 0) return "All locations";
+  const names = locations
+    .filter((location) => locationIds.includes(location.id))
+    .map((location) => location.name);
+  return names.length > 0 ? names.join(", ") : "All locations";
+}

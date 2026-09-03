@@ -14,20 +14,23 @@ import { listLocations } from "@/lib/api/locations";
 import {
   formatCredits,
   formatPlanInterval,
+  formatPlanLocations,
   formatPlanPrice,
 } from "@/lib/memberships/format";
 import type { MembershipPlan } from "@/lib/types/memberships";
+import type { Location } from "@/lib/types/settings";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { PlanStatusPill } from "@/components/memberships/PlanStatusPill";
 
 const TABLE_COLUMNS =
-  "grid grid-cols-[minmax(0,1fr)_120px_140px_140px_150px_120px_140px] items-center gap-4";
+  "grid grid-cols-[minmax(0,1fr)_120px_140px_140px_180px_150px_120px_140px] items-center gap-4";
 
 export function MembershipPlansList({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [archivingId, setArchivingId] = useState<string | null>(null);
@@ -44,6 +47,7 @@ export function MembershipPlansList({ embedded = false }: { embedded?: boolean }
         ]);
         if (cancelled) return;
         setPlans(plansData);
+        setLocations(locations);
         if (org) {
           const primaryLocation =
             locations.find((l) => l.status === "active") ?? locations[0];
@@ -77,6 +81,7 @@ export function MembershipPlansList({ embedded = false }: { embedded?: boolean }
           billingInterval: plan.billingInterval,
           classCredits: plan.classCredits,
           status: "inactive",
+          locationIds: plan.locationIds ?? [],
         });
         setPlans((prev) =>
           prev.map((p) =>
@@ -139,6 +144,7 @@ export function MembershipPlansList({ embedded = false }: { embedded?: boolean }
           <span>Price</span>
           <span>Interval</span>
           <span>Credits</span>
+          <span>Locations</span>
           <span>Active Members</span>
           <span>Status</span>
           <span className="text-right">Actions</span>
@@ -162,6 +168,9 @@ export function MembershipPlansList({ embedded = false }: { embedded?: boolean }
                 {formatPlanInterval(plan)}
               </p>
               <p className="text-sm text-slate-600">{formatCredits(plan)}</p>
+              <p className="text-sm text-slate-600">
+                {formatPlanLocations(plan.locationIds ?? [], locations)}
+              </p>
               <p className="text-sm font-semibold text-teal-800">
                 {plan.activeMemberCount ?? 0}
               </p>
