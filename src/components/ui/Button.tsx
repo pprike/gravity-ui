@@ -11,13 +11,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500",
+    "bg-primary-600 text-white shadow-soft hover:bg-primary-700 hover:shadow-glow active:bg-primary-800 focus-visible:ring-primary-500",
   secondary:
-    "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 focus-visible:ring-primary-500",
+    "border border-neutral-200 bg-white text-neutral-900 shadow-soft hover:border-neutral-300 hover:bg-neutral-50 focus-visible:ring-primary-500",
   tertiary:
-    "bg-transparent text-neutral-700 hover:bg-neutral-100 focus-visible:ring-primary-500",
+    "bg-transparent text-neutral-700 hover:bg-neutral-100/80 focus-visible:ring-primary-500",
   destructive:
-    "bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger-500",
+    "bg-danger-600 text-white shadow-soft hover:bg-danger-700 focus-visible:ring-danger-500",
 };
 
 export function Button({
@@ -32,9 +32,9 @@ export function Button({
   return (
     <button
       className={clsx(
-        "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
+        "inline-flex items-center justify-center gap-2 rounded-control px-4 py-2.5 text-sm font-semibold tracking-tight transition-all duration-200",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-        "disabled:cursor-not-allowed disabled:opacity-60",
+        "disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none",
         variantStyles[variant],
         fullWidth && "w-full",
         className,

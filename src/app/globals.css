@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  --background: #f3f7f6;
+  --foreground: #12201e;
+  --surface: #ffffff;
+  --surface-muted: #eef5f3;
+  --surface-elevated: #ffffff;
+  --ink: #0b1514;
+  --ink-soft: #1a2c29;
 
-  /* Spacing tokens */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -14,7 +18,15 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  /* Brand colors */
+  --radius-control: 0.75rem;
+  --radius-panel: 1rem;
+
+  --shadow-soft: 0 1px 2px rgb(15 40 36 / 0.04), 0 8px 24px rgb(15 40 36 / 0.04);
+  --shadow-card: 0 1px 1px rgb(15 40 36 / 0.03), 0 10px 28px rgb(15 40 36 / 0.06);
+  --shadow-lift: 0 8px 30px rgb(15 40 36 / 0.1);
+  --shadow-glow: 0 0 0 4px rgb(13 148 136 / 0.12);
+
+  /* Brand — teal studio accent */
   --color-primary-50: #f0fdfa;
   --color-primary-100: #ccfbf1;
   --color-primary-200: #99f6e4;
@@ -26,16 +38,16 @@
   --color-primary-800: #115e59;
   --color-primary-900: #134e4a;
 
-  --color-neutral-50: #fafafa;
-  --color-neutral-100: #f5f5f5;
-  --color-neutral-200: #e5e5e5;
-  --color-neutral-300: #d4d4d4;
-  --color-neutral-400: #a3a3a3;
-  --color-neutral-500: #737373;
-  --color-neutral-600: #525252;
-  --color-neutral-700: #404040;
-  --color-neutral-800: #262626;
-  --color-neutral-900: #171717;
+  --color-neutral-50: #f7faf9;
+  --color-neutral-100: #eef3f2;
+  --color-neutral-200: #dce6e4;
+  --color-neutral-300: #c3d0cd;
+  --color-neutral-400: #8fa09c;
+  --color-neutral-500: #667873;
+  --color-neutral-600: #4d5d59;
+  --color-neutral-700: #384743;
+  --color-neutral-800: #24312e;
+  --color-neutral-900: #12201e;
 
   --color-success-50: #f0fdf4;
   --color-success-600: #16a34a;
@@ -50,27 +62,56 @@
   --color-danger-700: #b91c1c;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+@layer base {
+  * {
+    border-color: var(--color-neutral-200);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    color: var(--foreground);
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgb(20 184 166 / 0.1), transparent 55%),
+      radial-gradient(900px 500px at 92% 0%, rgb(15 118 110 / 0.07), transparent 50%),
+      var(--background);
+    font-family: var(--font-outfit), system-ui, sans-serif;
+    font-feature-settings: "ss01" on, "cv11" on;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(13 148 136 / 0.22);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-syne), var(--font-outfit), sans-serif;
+  }
+
   .text-display {
-    @apply text-3xl font-semibold tracking-tight;
+    @apply font-display text-3xl font-semibold tracking-tight;
   }
 
   .text-h1 {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply font-display text-2xl font-semibold tracking-tight;
   }
 
   .text-h2 {
-    @apply text-xl font-semibold;
+    @apply text-xl font-semibold tracking-tight;
   }
 
   .text-h3 {
-    @apply text-lg font-semibold;
+    @apply text-lg font-semibold tracking-tight;
   }
 
   .text-body {
@@ -79,5 +120,26 @@ body {
 
   .text-caption {
     @apply text-sm leading-normal;
+  }
+
+  .surface-panel {
+    @apply rounded-panel border border-neutral-200/80 bg-surface shadow-card;
+  }
+
+  .portal-main-enter {
+    animation: fade-up 0.45s ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .portal-main-enter,
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-pulse-dot {
+    animation: none !important;
   }
 }

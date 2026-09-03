@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             Skip to content
           </a>
-          <div className="flex min-h-screen bg-slate-50">
+          <div className="flex min-h-screen bg-transparent">
             <Sidebar
               mobileOpen={mobileNavOpen}
               onMobileOpenChange={setMobileNavOpen}
@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ) : null}
               <main
                 id="main-content"
-                className="flex-1 overflow-auto p-6 lg:p-8"
+                className="portal-main-enter flex-1 overflow-auto p-5 sm:p-6 lg:p-8"
               >
                 {children}
               </main>

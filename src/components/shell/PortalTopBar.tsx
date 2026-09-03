@@ -154,11 +154,11 @@ export function PortalTopBar({
   }
 
   return (
-    <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-neutral-200/70 bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
-          className="rounded-lg border border-neutral-200 bg-white p-2 text-neutral-700 shadow-sm lg:hidden"
+          className="rounded-control border border-neutral-200 bg-white p-2 text-neutral-700 shadow-soft transition-colors hover:bg-neutral-50 lg:hidden"
           onClick={onToggleMobileNav}
           aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
         >
@@ -169,9 +169,11 @@ export function PortalTopBar({
           )}
         </button>
         <div className="min-w-0">
-          <p className="truncate text-lg font-bold text-slate-900">{meta.title}</p>
+          <p className="font-display truncate text-lg font-semibold tracking-tight text-neutral-900">
+            {meta.title}
+          </p>
           {meta.subtitle ? (
-            <p className="hidden truncate text-xs text-slate-500 sm:block">
+            <p className="hidden truncate text-xs text-neutral-500 sm:block">
               {meta.subtitle}
             </p>
           ) : null}
@@ -181,7 +183,7 @@ export function PortalTopBar({
       <div className="flex items-center gap-2 sm:gap-3">
         <form
           onSubmit={handleSearch}
-          className="hidden md:flex w-56 lg:w-72 items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20"
+          className="hidden w-56 items-center gap-2 rounded-control border border-neutral-200 bg-neutral-50/80 px-3 py-2 shadow-soft transition-shadow focus-within:border-primary-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500/20 md:flex lg:w-72"
         >
           <Search className="size-4 shrink-0 text-neutral-400" aria-hidden />
           <input
@@ -193,7 +195,7 @@ export function PortalTopBar({
                 ? "Search members..."
                 : "Search classes..."
             }
-            className="w-full bg-transparent text-[13px] text-slate-900 placeholder:text-neutral-400 focus:outline-none"
+            className="w-full bg-transparent text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
             aria-label="Search portal"
           />
         </form>
@@ -202,7 +204,7 @@ export function PortalTopBar({
           <div className="relative" ref={locationRef}>
             <button
               type="button"
-              className="inline-flex max-w-[160px] items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] font-medium text-neutral-800 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="inline-flex max-w-[160px] items-center gap-2 rounded-control border border-neutral-200 bg-white px-3 py-2 text-[13px] font-medium text-neutral-800 shadow-soft transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-haspopup="listbox"
               aria-expanded={locationOpen}
               onClick={() => setLocationOpen((open) => !open)}
@@ -216,7 +218,7 @@ export function PortalTopBar({
             {locationOpen ? (
               <ul
                 role="listbox"
-                className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white py-1 shadow-lg"
+                className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-panel border border-neutral-200/80 bg-surface py-1 shadow-lift animate-fade-up"
               >
                 {locations.map((location) => (
                   <li key={location.id}>
@@ -246,7 +248,7 @@ export function PortalTopBar({
         <div className="relative" ref={notificationsRef}>
           <button
             type="button"
-            className="rounded-lg border border-neutral-200 bg-white p-2 text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className="rounded-control border border-neutral-200 bg-white p-2 text-neutral-600 shadow-soft transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             aria-label="Notifications"
             aria-expanded={notificationsOpen}
             onClick={() => setNotificationsOpen((open) => !open)}
@@ -254,9 +256,9 @@ export function PortalTopBar({
             <Bell className="size-[18px]" />
           </button>
           {notificationsOpen ? (
-            <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg">
-              <p className="text-sm font-semibold text-slate-900">Notifications</p>
-              <p className="mt-2 text-sm text-slate-500">
+            <div className="absolute right-0 z-30 mt-2 w-72 rounded-panel border border-neutral-200/80 bg-surface p-4 shadow-lift animate-fade-up">
+              <p className="text-sm font-semibold text-neutral-900">Notifications</p>
+              <p className="mt-2 text-sm text-neutral-500">
                 You&apos;re all caught up. Studio alerts will appear here.
               </p>
               {canOpenSettings ? (
@@ -276,35 +278,35 @@ export function PortalTopBar({
           <div className="relative" ref={accountRef}>
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg p-1 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="inline-flex items-center gap-2 rounded-control p-1 transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label="Account menu"
               aria-expanded={accountOpen}
               onClick={() => setAccountOpen((open) => !open)}
             >
-              <div className="flex size-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-800">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-800 ring-2 ring-white">
                 {displayName.charAt(0).toUpperCase()}
               </div>
               <div className="hidden text-left sm:block">
-                <p className="text-[13px] font-semibold text-slate-900">
+                <p className="text-[13px] font-semibold text-neutral-900">
                   {displayName}
                 </p>
-                <p className="text-[11px] text-slate-500">{roleLabel}</p>
+                <p className="text-[11px] text-neutral-500">{roleLabel}</p>
               </div>
               <ChevronDown className="hidden size-3.5 text-neutral-400 sm:block" />
             </button>
             {accountOpen ? (
-              <div className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-panel border border-neutral-200/80 bg-surface py-1 shadow-lift animate-fade-up">
                 <div className="border-b border-neutral-100 px-3 py-2">
-                  <p className="truncate text-sm font-semibold text-slate-900">
+                  <p className="truncate text-sm font-semibold text-neutral-900">
                     {displayName}
                   </p>
-                  <p className="truncate text-xs text-slate-500">{user.email}</p>
-                  <p className="mt-1 text-[11px] text-slate-400">{brand.name}</p>
+                  <p className="truncate text-xs text-neutral-500">{user.email}</p>
+                  <p className="mt-1 text-[11px] text-neutral-400">{brand.name}</p>
                 </div>
                 {canOpenSettings ? (
                   <Link
                     href="/settings"
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-neutral-50"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
                     onClick={() => setAccountOpen(false)}
                   >
                     <Settings className="size-4" />
@@ -313,7 +315,7 @@ export function PortalTopBar({
                 ) : null}
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-neutral-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
                   onClick={() => void handleSignOut()}
                 >
                   <LogOut className="size-4" />

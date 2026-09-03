@@ -24,13 +24,15 @@ export function KpiCard({
     <Card
       padding="sm"
       className={clsx(
-        "h-full p-6",
-        href && "transition-shadow group-hover:shadow-md",
+        "h-full p-6 transition-all duration-200",
+        href && "group-hover:-translate-y-0.5 group-hover:shadow-lift",
       )}
     >
-      <p className="text-sm text-slate-500">{label}</p>
+      <p className="text-sm font-medium text-neutral-500">{label}</p>
       <div className="mt-3 flex items-end justify-between gap-3">
-        <p className="text-3xl font-bold text-slate-900">{value}</p>
+        <p className="font-display text-3xl font-semibold tracking-tight text-neutral-900">
+          {value}
+        </p>
         <span
           className={clsx(
             "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold",
@@ -47,7 +49,7 @@ export function KpiCard({
           {delta}
         </span>
       </div>
-      <p className="mt-3 text-xs text-slate-400">{footnote}</p>
+      <p className="mt-3 text-xs text-neutral-400">{footnote}</p>
     </Card>
   );
 

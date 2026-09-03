@@ -25,13 +25,17 @@ export function Select({
   required,
   ...props
 }: SelectProps) {
-  const selectId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+  const selectId =
+    id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   const isRequired = showRequired ?? required;
 
   return (
     <div className="space-y-1.5">
       {label ? (
-        <label htmlFor={selectId} className="block text-[13px] font-medium text-slate-800">
+        <label
+          htmlFor={selectId}
+          className="block text-[13px] font-semibold tracking-tight text-neutral-800"
+        >
           {label}
           {isRequired && <span className="ml-0.5 text-danger-600">*</span>}
         </label>
@@ -39,9 +43,11 @@ export function Select({
       <select
         id={selectId}
         className={clsx(
-          "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-neutral-900",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1",
-          error ? "border-danger-500" : "border-neutral-300",
+          "w-full rounded-control border bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-soft transition-shadow",
+          "focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-1",
+          error
+            ? "border-danger-500 focus:border-danger-500"
+            : "border-neutral-200 focus:border-primary-500",
           className,
         )}
         aria-invalid={Boolean(error)}

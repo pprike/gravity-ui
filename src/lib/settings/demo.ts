@@ -87,7 +87,7 @@ const DEFAULT_DEMO: DemoStore = {
     primaryColor: "#0d9488",
     accentColor: "#14b8a6",
     logoUrl: null,
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+    fontFamily: "var(--font-outfit), system-ui, sans-serif",
   },
   roles: [
     { id: "role-admin", name: "Admin", description: "Full organization access" },

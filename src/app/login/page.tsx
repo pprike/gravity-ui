@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Dumbbell } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { demoLoginEnabled } from "@/lib/auth/demo";
@@ -85,20 +86,40 @@ export default function LoginPage() {
 
   if (isLoading || isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-50 via-white to-primary-50 px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(900px 520px at 15% 10%, rgba(20,184,166,0.18), transparent 55%), radial-gradient(700px 420px at 85% 90%, rgba(15,118,110,0.12), transparent 50%), linear-gradient(160deg, #f7fbfa 0%, #eef6f4 45%, #f4f8f7 100%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f766e' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+        }}
+      />
+
+      <div className="relative w-full max-w-md animate-fade-up space-y-6">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+          <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-glow">
+            <Dumbbell className="size-7" aria-hidden />
+          </div>
+          <p className="font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
             Gravity
           </p>
-          <h1 className="mt-2 text-display text-neutral-900">
+          <h1 className="mt-3 text-xl font-semibold tracking-tight text-neutral-800">
             {tenantOptions ? "Choose organization" : "Sign in"}
           </h1>
           <p className="mt-2 text-body text-neutral-600">
@@ -108,7 +129,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card>
+        <Card className="shadow-lift">
           <form onSubmit={handleSubmit} className="space-y-4">
             {!tenantOptions ? (
               <>
@@ -148,7 +169,7 @@ export default function LoginPage() {
 
             {error && (
               <p
-                className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700"
+                className="rounded-control bg-danger-50 px-3 py-2 text-sm text-danger-700"
                 role="alert"
               >
                 {error}
@@ -173,8 +194,8 @@ export default function LoginPage() {
         </Card>
 
         {!tenantOptions && demoLoginEnabled() ? (
-          <Card padding="sm">
-            <p className="mb-3 text-sm font-medium text-neutral-800">
+          <Card padding="sm" className="border-dashed bg-white/70">
+            <p className="mb-1 text-sm font-semibold text-neutral-800">
               Preview without API
             </p>
             <p className="mb-4 text-caption text-neutral-500">
@@ -199,7 +220,7 @@ export default function LoginPage() {
           Invited to join?{" "}
           <Link
             href="/activate"
-            className="font-medium text-primary-600 hover:text-primary-700"
+            className="font-semibold text-primary-700 transition-colors hover:text-primary-800"
           >
             Activate your account
           </Link>

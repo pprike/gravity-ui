@@ -43,23 +43,23 @@ export function SidePanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
       <button
         type="button"
-        className="absolute inset-0 bg-neutral-900/40"
+        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
         onClick={onClose}
         aria-label="Close panel"
       />
       <aside
         ref={panelRef}
-        className={`relative flex h-full w-full max-w-md flex-col bg-white shadow-xl ${
-          highlighted ? "border-2 border-primary-600 shadow-primary-600/10" : ""
+        className={`relative flex h-full w-full max-w-md flex-col border-l border-neutral-200/80 bg-surface shadow-lift ${
+          highlighted ? "border-l-2 border-l-primary-600" : ""
         }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="side-panel-title"
       >
-        <div className="flex items-start justify-between border-b border-neutral-200 px-6 py-5">
+        <div className="flex items-start justify-between border-b border-neutral-200/80 px-6 py-5">
           <div>
             <h2 id="side-panel-title" className="text-h3 text-neutral-900">
               {title}
@@ -71,7 +71,7 @@ export function SidePanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+            className="rounded-control p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

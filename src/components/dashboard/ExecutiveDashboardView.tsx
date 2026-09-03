@@ -365,10 +365,10 @@ function DashboardHeader({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
           Welcome back, {firstName}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-neutral-500">
           {locationName
             ? `Here is what is happening at ${locationName} today.`
             : "Here is what is happening at your studio today."}
@@ -403,10 +403,14 @@ function PanelHeader({
   live?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+    <div className="flex items-center justify-between border-b border-neutral-200/80 px-6 py-4">
       <div className="flex items-center gap-2">
-        {live ? <span className="size-2 rounded-full bg-emerald-500" /> : null}
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        {live ? (
+          <span className="size-2 rounded-full bg-emerald-500 animate-pulse-dot" />
+        ) : null}
+        <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
+          {title}
+        </h2>
       </div>
       {href ? (
         <Link

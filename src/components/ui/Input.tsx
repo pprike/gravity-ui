@@ -24,7 +24,10 @@ export function Input({
   return (
     <div className="space-y-1.5">
       {label ? (
-        <label htmlFor={inputId} className="block text-[13px] font-medium text-slate-800">
+        <label
+          htmlFor={inputId}
+          className="block text-[13px] font-semibold tracking-tight text-neutral-800"
+        >
           {label}
           {isRequired && <span className="ml-0.5 text-danger-600">*</span>}
         </label>
@@ -32,13 +35,17 @@ export function Input({
       <input
         id={inputId}
         className={clsx(
-          "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-neutral-900",
-          "placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1",
-          error ? "border-danger-500" : "border-neutral-300",
+          "w-full rounded-control border bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-soft transition-shadow",
+          "placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-1",
+          error
+            ? "border-danger-500 focus:border-danger-500"
+            : "border-neutral-200 focus:border-primary-500",
           className,
         )}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+        aria-describedby={
+          error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
+        }
         {...props}
       />
       {hint && !error && (
@@ -47,7 +54,11 @@ export function Input({
         </p>
       )}
       {error && (
-        <p id={`${inputId}-error`} className="text-caption text-danger-600" role="alert">
+        <p
+          id={`${inputId}-error`}
+          className="text-caption text-danger-600"
+          role="alert"
+        >
           {error}
         </p>
       )}

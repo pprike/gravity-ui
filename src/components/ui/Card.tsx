@@ -20,7 +20,7 @@ export function Card({
   return (
     <div
       className={clsx(
-        "rounded-xl border border-neutral-200 bg-white shadow-sm",
+        "rounded-panel border border-neutral-200/80 bg-surface shadow-card",
         paddingStyles[padding],
         className,
       )}
