@@ -37,6 +37,7 @@ export async function createMembershipPlan(
       stripeProductId: null,
       stripePriceId: null,
       activeMemberCount: 0,
+      locationIds: payload.locationIds ?? [],
     };
     return demoMemberships.savePlan(plan);
   }

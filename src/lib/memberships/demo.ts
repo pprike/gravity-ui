@@ -30,6 +30,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 312,
+    locationIds: [],
   },
   {
     id: "plan-2",
@@ -44,6 +45,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 198,
+    locationIds: ["loc-2"],
   },
   {
     id: "plan-3",
@@ -58,6 +60,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 45,
+    locationIds: [],
   },
   {
     id: "plan-4",
@@ -72,6 +75,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 67,
+    locationIds: ["loc-1", "loc-3"],
   },
   {
     id: "plan-5",
@@ -86,6 +90,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 89,
+    locationIds: [],
   },
   {
     id: "plan-6",
@@ -100,6 +105,7 @@ const DEFAULT_PLANS: MembershipPlan[] = [
     stripeProductId: null,
     stripePriceId: null,
     activeMemberCount: 0,
+    locationIds: ["loc-1"],
   },
 ];
 
