@@ -165,6 +165,19 @@ export async function removeWaitlistMember(
   });
 }
 
+export async function cancelMemberClassBooking(
+  userId: string,
+  bookingId: string,
+): Promise<void> {
+  if (demoMembershipsEnabled()) {
+    demoSchedule.cancelBooking(userId, bookingId);
+    return;
+  }
+  await apiRequest<void>(`/api/v1/users/${userId}/class-bookings/${bookingId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function cancelClassSession(sessionId: string): Promise<ClassSession> {
   if (demoMembershipsEnabled()) {
     return demoSchedule.cancelSession(sessionId);

@@ -446,4 +446,39 @@ export const demoSchedule = {
     }
     writeStore(store);
   },
+  cancelBooking(userId: string, bookingId: string): void {
+    const store = readStore();
+    for (const [sessionId, entries] of Object.entries(store.rosters)) {
+      const index = entries.findIndex(
+        (entry) => entry.bookingId === bookingId && entry.userId === userId,
+      );
+      if (index < 0) continue;
+      const roster = entries.filter((_, i) => i !== index);
+      store.rosters[sessionId] = roster;
+      const existing = allSessions(store).find((session) => session.id === sessionId);
+      if (existing) {
+        const updated: ClassSession = {
+          ...existing,
+          bookedCount: Math.max(0, existing.bookedCount - 1),
+        };
+        const createdIndex = store.createdSessions.findIndex(
+          (session) => session.id === sessionId,
+        );
+        if (createdIndex >= 0) {
+          store.createdSessions[createdIndex] = updated;
+        }
+      }
+      writeStore(store);
+      return;
+    }
+    for (const [sessionId, entries] of Object.entries(DEFAULT_ROSTER)) {
+      const index = entries.findIndex(
+        (entry) => entry.bookingId === bookingId && entry.userId === userId,
+      );
+      if (index < 0) continue;
+      store.rosters[sessionId] = entries.filter((_, i) => i !== index);
+      writeStore(store);
+      return;
+    }
+  },
 };

@@ -6,12 +6,13 @@ import { CheckCircle2, Download, Loader2, Printer } from "lucide-react";
 import { ClassMessagePanel } from "@/components/communication/ClassMessagePanel";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   listClassSessionAttendance,
   markClassAttendance,
 } from "@/lib/api/attendance";
 import { ApiClientError } from "@/lib/api/client";
-import { getClassSession, listClassRoster, promoteWaitlistMember, removeWaitlistMember } from "@/lib/api/schedule";
+import { getClassSession, listClassRoster, promoteWaitlistMember, removeWaitlistMember, cancelMemberClassBooking } from "@/lib/api/schedule";
 import { formatSessionDateTime } from "@/lib/schedule/format";
 import type {
   ClassAttendanceEntry,
@@ -82,6 +83,8 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
   const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(null);
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   const [waitlistActionUserId, setWaitlistActionUserId] = useState<string | null>(null);
+  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<ClassRosterEntry | null>(null);
 
   const reloadRoster = useCallback(async () => {
     const loadedRoster = await listClassRoster(sessionId);
@@ -188,6 +191,25 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
     },
     [reloadRoster, sessionId],
   );
+
+  const handleCancelBooking = useCallback(async () => {
+    if (!cancelTarget) return;
+    setCancellingBookingId(cancelTarget.bookingId);
+    setError(null);
+    try {
+      await cancelMemberClassBooking(cancelTarget.userId, cancelTarget.bookingId);
+      await reloadRoster();
+      const loadedSession = await getClassSession(sessionId);
+      if (loadedSession) setSession(loadedSession);
+      setCancelTarget(null);
+    } catch (err) {
+      setError(
+        err instanceof ApiClientError ? err.message : "Unable to cancel booking.",
+      );
+    } finally {
+      setCancellingBookingId(null);
+    }
+  }, [cancelTarget, reloadRoster, sessionId]);
 
   const confirmed = useMemo(
     () => roster.filter((row) => row.bookingStatus !== "waitlisted"),
@@ -315,6 +337,8 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
         attendanceByUser={attendanceByUser}
         markingUserId={markingUserId}
         onMarkAttendance={handleMarkAttendance}
+        cancellingBookingId={cancellingBookingId}
+        onCancelBooking={setCancelTarget}
       />
       {waitlist.length > 0 ? (
         <RosterTable
@@ -326,6 +350,23 @@ export function ClassRosterView({ sessionId }: ClassRosterViewProps) {
           onRemoveWaitlist={handleRemoveWaitlist}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        title="Cancel booking?"
+        description={
+          cancelTarget
+            ? `Remove ${cancelTarget.displayName} from this class. Their spot may be offered to the waitlist.`
+            : ""
+        }
+        confirmLabel="Cancel booking"
+        confirmVariant="destructive"
+        isLoading={cancellingBookingId !== null}
+        onConfirm={() => void handleCancelBooking()}
+        onCancel={() => {
+          if (cancellingBookingId === null) setCancelTarget(null);
+        }}
+      />
     </div>
   );
 }
@@ -337,6 +378,8 @@ function RosterTable({
   attendanceByUser,
   markingUserId,
   onMarkAttendance,
+  cancellingBookingId,
+  onCancelBooking,
   waitlistActionUserId,
   onPromoteWaitlist,
   onRemoveWaitlist,
@@ -351,12 +394,15 @@ function RosterTable({
     status: ClassAttendanceStatus,
     displayName: string,
   ) => void;
+  cancellingBookingId?: string | null;
+  onCancelBooking?: (entry: ClassRosterEntry) => void;
   waitlistActionUserId?: string | null;
   onPromoteWaitlist?: (userId: string) => void;
   onRemoveWaitlist?: (userId: string) => void;
 }) {
   const showAttendance = !waitlist && attendanceByUser && onMarkAttendance;
   const showWaitlistActions = waitlist && onPromoteWaitlist && onRemoveWaitlist;
+  const showCancelBooking = !waitlist && onCancelBooking;
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
@@ -374,6 +420,7 @@ function RosterTable({
               <th className="px-5 py-3">Membership Plan</th>
               <th className="px-5 py-3">Status</th>
               {showAttendance ? <th className="px-5 py-3">Attendance</th> : null}
+              {showCancelBooking ? <th className="px-5 py-3">Booking</th> : null}
               {showWaitlistActions ? <th className="px-5 py-3">Actions</th> : null}
               <th className="px-5 py-3">Booked Time</th>
             </tr>
@@ -383,6 +430,7 @@ function RosterTable({
               const currentAttendance = attendanceByUser?.get(row.userId);
               const isMarking = markingUserId === row.userId;
               const isWaitlistAction = waitlistActionUserId === row.userId;
+              const isCancelling = cancellingBookingId === row.bookingId;
               return (
                 <tr key={row.bookingId} className="border-b border-neutral-100 last:border-0">
                   <td className="px-5 py-3.5 text-sm text-slate-500">
@@ -436,6 +484,22 @@ function RosterTable({
                           );
                         })}
                       </div>
+                    </td>
+                  ) : null}
+                  {showCancelBooking ? (
+                    <td className="px-5 py-3.5">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={isCancelling}
+                        onClick={() => onCancelBooking?.(row)}
+                      >
+                        {isCancelling ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          "Cancel"
+                        )}
+                      </Button>
                     </td>
                   ) : null}
                   {showWaitlistActions ? (
