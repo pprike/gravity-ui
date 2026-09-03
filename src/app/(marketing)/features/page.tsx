@@ -177,7 +177,7 @@ export default function FeaturesPage() {
           Want to see it live?
         </h2>
         <p className="mx-auto mt-3 max-w-md text-neutral-600">
-          Book a 30-minute demo and we'll walk you through the platform with
+          Book a 30-minute demo and we&apos;ll walk you through the platform with
           your real use case in mind.
         </p>
         <Link

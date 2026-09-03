@@ -55,9 +55,9 @@ export default function ContactPage() {
         <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-primary-50 text-primary-600">
           <CheckCircle2 className="size-8" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">We'll be in touch!</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-ink">We&apos;ll be in touch!</h1>
         <p className="mt-4 max-w-sm text-neutral-600">
-          Thanks for reaching out. We'll follow up within one business day to schedule
+          Thanks for reaching out. We&apos;ll follow up within one business day to schedule
           your demo.
         </p>
         <Link
@@ -90,7 +90,7 @@ export default function ContactPage() {
             Book a free demo
           </h1>
           <p className="mx-auto mt-5 max-w-lg text-lg text-neutral-600">
-            Tell us about your studio and we'll show you exactly how Gravity
+            Tell us about your studio and we&apos;ll show you exactly how Gravity
             fits into your workflow — no sales pressure, no commitments.
           </p>
         </div>

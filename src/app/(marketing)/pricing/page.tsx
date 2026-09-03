@@ -165,7 +165,7 @@ export default function PricingPage() {
           Still have questions?
         </h2>
         <p className="mt-3 text-primary-100">
-          Talk to us — we're happy to help you find the right fit.
+          Talk to us — we&apos;re happy to help you find the right fit.
         </p>
         <Link
           href="/contact"

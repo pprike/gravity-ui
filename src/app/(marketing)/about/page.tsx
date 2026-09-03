@@ -130,7 +130,7 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="border-t border-neutral-200/60 bg-primary-50 px-6 py-16 text-center">
         <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-          Come see what we've built
+          Come see what we&apos;ve built
         </h2>
         <p className="mx-auto mt-3 max-w-md text-neutral-600">
           A 30-minute demo is all it takes to know whether Gravity is the right fit.
